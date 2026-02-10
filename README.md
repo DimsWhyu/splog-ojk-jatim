@@ -1,4 +1,4 @@
-# SIPLOG - Sistem Informasi Pengelolaan Logistik OJK Jawa Timur
+# SPLOG - Sistem Pengelolaan Logistik OJK Jawa Timur
 
 Website untuk manajemen inventaris dan pengajuan logistik internal OJK Jawa Timur.
 
