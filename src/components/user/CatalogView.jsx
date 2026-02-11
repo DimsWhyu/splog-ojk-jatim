@@ -108,7 +108,7 @@ const CatalogView = ({ inventory, filteredItems, activeCategory, setActiveCatego
       </button>
 
       {/* STICKY HEADER CATALOG */}
-      <div className="sticky top-[96px] z-40 bg-[#FDFDFD] -mx-4 px-4 pb-8 pt-4 transition-all border-b border-transparent">
+      <div className="sticky top-[96px] z-40 bg-[#FDFDFD] -mx-4 px-4 pb-8 pt-4 transition-all rounded-[20px] border-b border-transparent">
         <div className="space-y-8">
           <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-start gap-4">

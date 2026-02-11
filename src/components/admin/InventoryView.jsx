@@ -262,7 +262,7 @@ const InventoryView = ({ inventory, addAmounts, handleAddAmountChange, validateS
           {/* Overlay Fullscreen total dengan Backdrop Blur pekat */}
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md animate-fade-in" onClick={() => setIsEditModalOpen(false)}></div>
           
-          <div className="relative z-10 bg-white rounded-[30px] shadow-2xl w-full max-w-lg overflow-hidden animate-modal-pop border border-white/20">
+          <div className="relative z-10 bg-white rounded-[20px] shadow-2xl w-full max-w-lg overflow-hidden animate-modal-pop border border-white/20">
             <div className="bg-gradient-to-r from-red-600 to-[#4a0404] p-8 text-white">
               <div className="flex justify-between items-center">
                 <div>
@@ -350,7 +350,7 @@ const InventoryView = ({ inventory, addAmounts, handleAddAmountChange, validateS
           {/* Backdrop Blur Fullscreen Total */}
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md animate-fade-in" onClick={() => setIsDeleteModalOpen(false)}></div>
           
-          <div className="relative z-50 bg-white rounded-[40px] shadow-2xl w-full max-w-sm overflow-hidden animate-modal-pop text-center p-10 border border-red-50">
+          <div className="relative z-50 bg-white rounded-[20px] shadow-2xl w-full max-w-sm overflow-hidden animate-modal-pop text-center p-10 border border-red-50">
             <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
               <AlertTriangle className="w-12 h-12 text-red-600 animate-bounce" />
             </div>

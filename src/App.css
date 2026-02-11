@@ -128,3 +128,16 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #991b1b;
 }
+
+/* src/App.css */
+
+.bg-batik-ojk {
+  background-color: #f8fafc; /* Warna dasar Slate yang bersih agar mata tidak lelah */
+  
+  /* Gradasi merah OJK tipis di bagian bawah saja */
+  background-image: linear-gradient(to top, rgba(220, 38, 38, 0.08) 0%, transparent 20%);
+  
+  background-attachment: fixed; /* Membuat gradasi tetap berada di bawah layar saat di-scroll */
+  background-repeat: no-repeat;
+  background-size: cover;
+}

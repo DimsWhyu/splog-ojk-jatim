@@ -15,7 +15,7 @@ import LoginView from './components/common/LoginView';
 import { CartProvider, useCart } from './context/CartContext';
 import './App.css';
 
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwRF_rRxIFCLqKOycZOBaUFgBklsxCDS_ra8vIfnMf28W9fn52q1t43Byp0NLMSoXE8/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxBAdjy467133odchoT35GkDCZmzD3RbWhKJEDoGecYUX3_X5nC79Z3E3RihEWK81Yy/exec";
 
 const INITIAL_REQUESTS = [];
 
@@ -57,17 +57,25 @@ const AppContent = () => {
 
   const { cart, clearCart, addToCart: addToCartContext, updateCartQty, getCartItem } = useCart();
   
+  // --- REVISI: FUNGSI fetchAllData UNTUK SINKRONISASI RIWAYAT ---
   const fetchAllData = async () => {
       try {
         const response = await fetch(WEB_APP_URL); 
         const data = await response.json(); 
+        
         setValidUsers(data.users || []);
-        const formattedInventory = (data.inventory || []).map(item => ({...item, stock: Number(item.stock) || 0}));
+        const formattedInventory = (data.inventory || []).map(item => ({
+          ...item, 
+          stock: Number(item.stock) || 0
+        }));
         setInventory(formattedInventory);
 
+        // --- REVISI App.js (Bagian fetchAllData) ---
         if (data.history) {
           const formattedHistory = data.history.map(h => {
-            const summaryStr = h["Detail Barang"] || h["detailbarang"] || "";
+            // Sesuaikan mapping dengan safeKey (huruf kecil semua, tanpa spasi/titik)
+            const summaryStr = h.detailbarang || h["detailbarang"] || "";
+            
             const itemsDetailArray = summaryStr.split(', ').map(part => {
               const match = part.match(/(.+) \((\d+)\)/);
               if (!match) return null;
@@ -84,34 +92,36 @@ const AppContent = () => {
               };
             }).filter(Boolean);
 
-            const rawDate = String(h["Tanggal"] || h["tanggal"] || "");
-            const dateOnly = rawDate.split('T')[0]; 
-            const parts = dateOnly.split('-');
-            const formattedDate = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : rawDate;
-
+            // Ambil data menggunakan Safe Key yang konsisten
             return {
-              id: h["No. Referensi"] || h["noreferensi"],
-              user: h["Nama Pengaju"] || h["namapengaju"],
-              date: formattedDate, 
-              note: h["Tujuan"] || h["tujuan"],
-              status: h["Status"] || h["status"],
+              id: h.noreferensi || h["noreferensi"], // Dari "No. Referensi"
+              user: h.namapengaju || h["namapengaju"], // Dari "Nama Pengaju"
+              date: h.tanggalpengajuan || h.tanggal || h["tanggal"], // Dari "Tanggal Pengajuan"
+              note: h.tujuankebutuhan || h.tujuan || h["tujuan"], // Dari "Tujuan Kebutuhan"
+              status: h.statusverifikasi || h.status || h["status"], // Dari "Status Verifikasi"
               itemsDetail: itemsDetailArray 
             };
           });
           setRequests(formattedHistory);
         }
 
+        // Logika session login tetap sama...
         const savedUser = localStorage.getItem('splog_session');
         if (savedUser) {
           const userData = JSON.parse(savedUser);
           const user = (data.users || []).find(u => String(u.username) === userData.username);
           if (user) {
-            setIsLoggedIn(true); setCurrentUser(user); setRole(user.role);
+            setIsLoggedIn(true); 
+            setCurrentUser(user); 
+            setRole(user.role);
             setView(user.role === 'admin' ? 'dashboard' : 'catalog');
           }
         }
-      } catch (error) { console.error("Gagal sinkronisasi data:", error); } 
-      finally { setTimeout(() => setIsLoading(false), 2500); }
+      } catch (error) { 
+        console.error("Gagal sinkronisasi data riwayat:", error); 
+      } finally { 
+        setTimeout(() => setIsLoading(false), 2500); 
+      }
   };
 
   useEffect(() => { fetchAllData(); }, []);
@@ -292,7 +302,7 @@ const AppContent = () => {
 
   if (isLoading) {
     return (
-      <div className="fixed inset-0 z-[999] bg-[#FDFDFD] flex items-center justify-center overflow-hidden">
+      <div className="fixed inset-0 z-[999] bg-batik-ojk flex items-center justify-center overflow-hidden">
         <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/OJK_Logo.png" alt="OJK" className="h-28 w-auto animate-pulse" />
       </div>
     );
@@ -301,7 +311,7 @@ const AppContent = () => {
   if (!isLoggedIn) return <LoginView onLogin={handleLogin} />;
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FDFDFD] font-sans text-slate-800 animate-content-fade">
+    <div className="min-h-screen flex flex-col bg-batik-ojk font-sans text-slate-800 animate-content-fade">
       <Navbar role={role} currentUser={currentUser} onLogout={handleLogout} searchQuery={searchQuery} setSearchQuery={setSearchQuery} setView={setView} inventory={inventory} />
       <div className="flex-1 max-w-[1440px] mx-auto px-4 lg:px-10 py-8 flex gap-10 w-full items-start">
         <Sidebar role={role} view={view} setView={setView} />
@@ -311,29 +321,45 @@ const AppContent = () => {
           {role === 'user' && view === 'history' && (
             <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
               <h3 className="text-2xl font-bold text-slate-800 tracking-tight">Riwayat Pengajuan</h3>
-              <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
-                <table className="w-full text-left">
-                  <thead className="bg-slate-50 border-b border-slate-100 text-[11px] font-semibold text-slate-500 tracking-wider">
-                    <tr><th className="px-6 py-4">No. Referensi</th><th className="px-6 py-4">Tanggal Pengajuan</th><th className="px-6 py-4">Tujuan Kebutuhan</th><th className="px-6 py-4 text-center">Status</th><th className="px-6 py-4 text-center">Aksi</th></tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-50">
-                    {requests.filter(req => req.user === currentUser?.name).map(req => (
-                        <tr key={req.id} className="hover:bg-slate-50 transition-colors">
-                          <td className="px-6 py-4 font-semibold text-slate-900">{req.id}</td>
-                          <td className="px-6 py-4 text-sm text-slate-500 font-medium">{req.date}</td>
-                          <td className="px-6 py-4 text-sm text-slate-600 font-medium italic truncate max-w-[250px]">"{req.note}"</td>
-                          <td className="px-6 py-4 text-center">
-                            <span className={`px-3 py-1 rounded-full text-[10px] font-bold border ${req.status === 'Disetujui' ? 'bg-green-50 text-green-600 border-green-100' : req.status === 'Ditolak' || req.status === 'Dibatalkan' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>{req.status}</span>
-                          </td>
-                          <td className="px-6 py-4 text-center flex justify-center gap-2">
+              
+              {/* --- REVISI: Tambahkan max-h dan overflow-y agar bisa di-scroll --- */}
+              <div className="bg-white rounded-[17px] border border-slate-100 shadow-2xl shadow-slate-200/40 overflow-hidden relative">
+                <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
+                  <table className="w-full text-left border-collapse">
+                    
+                    {/* --- REVISI: Tambahkan sticky top-0 dan warna bg-slate-800 (OJK Style) --- */}
+                    <thead className="sticky top-0 z-20 bg-slate-800 text-white text-[13px] font-black shadow-md">
+                      <tr>
+                        <th className="px-6 py-5 border-b border-slate-700">No. Referensi</th>
+                        <th className="px-6 py-5 border-b border-slate-700">Tanggal Pengajuan</th>
+                        <th className="px-6 py-5 border-b border-slate-700">Tujuan Kebutuhan</th>
+                        <th className="px-6 py-5 border-b border-slate-700 text-center">Status</th>
+                        <th className="px-6 py-5 border-b border-slate-700 text-center">Aksi</th>
+                      </tr>
+                    </thead>
+
+                    <tbody className="divide-y divide-slate-50">
+                      {requests
+                        .filter(req => req.user === currentUser?.name)
+                        .reverse()
+                        .map(req => (
+                          <tr key={req.id} className="hover:bg-red-50/20 transition-all duration-300 group">
+                            <td className="px-6 py-6 font-black text-slate-800 group-hover:text-red-600 transition-colors">{req.id}</td>
+                            <td className="px-6 py-6 text-sm text-slate-500 font-medium">{req.date}</td>
+                            <td className="px-6 py-6 text-sm text-slate-600 font-medium italic truncate max-w-[250px]">"{req.note}"</td>
+                            <td className="px-6 py-6 text-center">
+                              <span className={`px-3 py-1 rounded-full text-[10px] font-bold border ${req.status === 'Disetujui' ? 'bg-green-50 text-green-600 border-green-100' : req.status === 'Ditolak' || req.status === 'Dibatalkan' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>{req.status}</span>
+                            </td>
+                            <td className="px-6 py-6 text-center flex justify-center gap-2">
                               <button onClick={() => setSelectedRequest(req)} className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all"><Eye className="w-4 h-4" /></button>
                               <button onClick={() => downloadXLSX(req)} className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all"><FileText className="w-4 h-4" /></button>
                               {req.status === 'Menunggu' && <button onClick={() => handleCancel(req)} className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-all"><X className="w-4 h-4" /></button>}
-                          </td>
-                        </tr>
-                    ))}
-                  </tbody>
-                </table>
+                            </td>
+                          </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
@@ -352,7 +378,7 @@ const AppContent = () => {
       {selectedRequest && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md animate-fade-in" onClick={() => setSelectedRequest(null)}></div>
-          <div className="relative bg-white rounded-[40px] shadow-2xl w-full max-w-2xl overflow-hidden animate-modal-pop border border-white/20">
+          <div className="relative bg-white rounded-[17px] shadow-2xl w-full max-w-2xl overflow-hidden animate-modal-pop border border-white/20">
             <div className="bg-gradient-to-r from-red-600 to-[#4a0404] p-8 text-white">
               <div className="flex justify-between items-center">
                 <div>
@@ -386,10 +412,18 @@ const AppContent = () => {
             </div>
             <div className="p-8 bg-slate-50 border-t border-slate-100">
               <div className="flex items-start gap-3">
-                <div className="mt-1"><Hash className="w-4 h-4 text-red-600" /></div>
-                <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Tujuan / Justifikasi Pengajuan:</p>
-                  <p className="text-sm font-bold text-slate-600 italic leading-relaxed">"{selectedRequest.note}"</p>
+                <div className="mt-1 flex-shrink-0">
+                  <Hash className="w-4 h-4 text-red-600" />
+                </div>
+                {/* REVISI: Tambahkan flex-1 dan min-w-0 agar container bisa mengecil */}
+                <div className="flex-1 min-w-0"> 
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                    Tujuan / Justifikasi Pengajuan:
+                  </p>
+                  {/* REVISI: Tambahkan break-words dan whitespace-pre-wrap */}
+                  <p className="text-sm font-bold text-slate-600 italic leading-relaxed break-words whitespace-pre-wrap">
+                    "{selectedRequest.note || "Tanpa Catatan"}"
+                  </p>
                 </div>
               </div>
             </div>
@@ -400,7 +434,7 @@ const AppContent = () => {
       {warning.show && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 text-center">
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setWarning({ ...warning, show: false })}></div>
-          <div className="relative bg-white rounded-[32px] shadow-2xl p-10 max-w-sm w-full animate-modal-pop">
+          <div className="relative bg-white rounded-[17px] shadow-2xl p-10 max-w-sm w-full animate-modal-pop">
             <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6"><AlertCircle className="w-10 h-10 text-red-600" /></div>
             <h3 className="text-xl font-black text-slate-800 mb-2">Stok Terbatas</h3>
             <p className="text-sm font-medium text-slate-500 mb-8 leading-relaxed">{warning.message}</p>
@@ -412,7 +446,7 @@ const AppContent = () => {
       {cancelModal.show && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md animate-fade-in" onClick={() => setCancelModal({ show: false, request: null })}></div>
-          <div className="relative bg-white rounded-[40px] shadow-2xl p-10 max-w-md w-full animate-modal-pop text-center">
+          <div className="relative bg-white rounded-[17px] shadow-2xl p-10 max-w-md w-full animate-modal-pop text-center">
             <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6"><AlertCircle className="w-12 h-12 text-red-600 animate-pulse" /></div>
             <h3 className="text-2xl font-black text-slate-800 mb-3 tracking-tight">Konfirmasi Batal</h3>
             <p className="text-sm font-medium text-slate-500 leading-relaxed px-2">Apakah Anda yakin ingin membatalkan pengajuan <span className="text-red-600 font-bold">{cancelModal.request?.id}</span>? <br /><span className="italic font-bold text-slate-400 text-xs mt-2 block">*Stok barang akan otomatis dikembalikan ke gudang.</span></p>

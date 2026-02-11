@@ -270,7 +270,7 @@ const AddItemView = ({ inventory, onAddItem, onCancel }) => {
       {showSuccessModal && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md animate-fade-in" onClick={() => { setShowSuccessModal(false); onCancel(); }}></div>
-          <div className="relative bg-white rounded-[40px] shadow-2xl w-full max-w-sm overflow-hidden animate-modal-pop text-center p-10 border border-emerald-50">
+          <div className="relative bg-white rounded-[20px] shadow-2xl w-full max-w-sm overflow-hidden animate-modal-pop text-center p-10 border border-emerald-50">
             <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner"><CheckCircle2 className="w-10 h-10 text-emerald-600 animate-bounce" /></div>
             <h3 className="text-2xl font-black text-slate-800 mb-2 tracking-tight">Berhasil!</h3>
             <p className="text-sm font-medium text-slate-500 leading-relaxed mb-8">Data inventaris baru telah tercatat secara otomatis di database logistik OJK Provinsi Jawa Timur.</p>
