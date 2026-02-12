@@ -108,9 +108,12 @@ const CatalogView = ({ inventory, filteredItems, activeCategory, setActiveCatego
       </button>
 
       {/* STICKY HEADER CATALOG */}
-      <div className="sticky top-[66px] md:top-[96px] z-40 bg-[#f8fafc] -mx-4 px-4 pt-4 pb-2">
-        {/* Inner Container: Warna Putih & Melengkung */}
-        <div className="bg-white rounded-[32px] p-6 shadow-sm border border-slate-100 space-y-6">
+      <div className="sticky top-[80px] md:top-[73px] z-30 -mx-300 px-300 bg-[#ffffff]">
+        {/* 1. Pembungkus di atas (bg-[#f8fafc]) berfungsi sebagai 'masker' 
+            yang menutup area transparan di luar rounded corner.
+        */}
+        
+        <div className="bg-white rounded-[20px] p-6 shadow-sm border border-slate-100 space-y-6 mt-4">
           <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-start gap-4">
               {/* Header Shape Aksen Merah OJK */}
@@ -127,35 +130,27 @@ const CatalogView = ({ inventory, filteredItems, activeCategory, setActiveCatego
             </div>
           </header>
 
-          {/* --- REVISI: CATEGORY NAVIGATION (SINGLE ROW SCROLL + TEXT WRAP) --- */}
-          <div className="flex flex-col gap-2"> {/* Bungkus dengan flex-col untuk layout yang lebih rapi */}
-            <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-[24px] border border-slate-100 shadow-inner overflow-x-auto max-w-full custom-scrollbar pb-4">
-              <div className="flex flex-nowrap items-stretch gap-2">
-                {dynamicCategories.map(cat => (
-                  <button 
-                    key={cat} 
-                    onClick={(e) => { 
-                      setActiveCategory(cat);
-                      e.currentTarget.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'nearest',
-                        inline: 'center'
-                      });
-                    }}
-                    className={`relative min-w-[120px] max-w-[160px] px-5 py-2.5 rounded-xl text-[11px] font-bold transition-all duration-500 tracking-tight flex items-center justify-center text-center overflow-hidden group active:scale-95
-                      ${activeCategory === cat 
-                        ? 'text-white shadow-md' 
-                        : 'text-slate-400 hover:text-slate-700'}`}
-                  >
-                    {activeCategory === cat && (
-                      <div className={`absolute inset-0 z-0 animate-in fade-in zoom-in-95 duration-500 ${getPillColor(cat)}`} />
-                    )}
-                    <span className="relative z-10 whitespace-normal leading-tight line-clamp-2">
-                      {cat}
-                    </span>
-                  </button>
-                ))}
-              </div>
+          {/* CATEGORY NAVIGATION DENGAN SCROLLBAR */}
+          <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-[20px] border border-slate-100 shadow-inner overflow-x-auto max-w-full custom-scrollbar pb-3">
+            <div className="flex flex-nowrap items-stretch gap-1.5">
+              {dynamicCategories.map(cat => (
+                <button 
+                  key={cat} 
+                  onClick={(e) => { 
+                    setActiveCategory(cat);
+                    e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                  }}
+                  className={`relative min-w-[110px] max-w-[150px] px-4 py-2 rounded-xl text-[11px] font-bold transition-all duration-500 tracking-tight flex items-center justify-center text-center overflow-hidden group active:scale-95
+                    ${activeCategory === cat ? 'text-white shadow-md' : 'text-slate-400 hover:text-slate-700'}`}
+                >
+                  {activeCategory === cat && (
+                    <div className={`absolute inset-0 z-0 animate-in fade-in zoom-in-95 duration-500 ${getPillColor(cat)}`} />
+                  )}
+                  <span className="relative z-10 whitespace-normal leading-tight line-clamp-2">
+                    {cat}
+                  </span>
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -206,15 +201,49 @@ const CatalogView = ({ inventory, filteredItems, activeCategory, setActiveCatego
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
-                      {cartItem ? (
-                        <div className="flex items-center gap-2 bg-white/10 p-1 rounded-xl border border-white/20">
-                          <button onClick={() => handleUpdateQuantity(item, currentQty - 1)} className={`w-8 h-8 flex items-center justify-center text-white rounded-lg transition-all active:scale-90 ${buttonColorClass}`}><Minus className="w-3.5 h-3.5" /></button>
-                          <input type="number" value={currentQty} onChange={(e) => handleUpdateQuantity(item, parseInt(e.target.value) || 0)} className="bg-transparent font-bold text-white text-base w-10 text-center focus:outline-none" />
-                          <button onClick={() => handleUpdateQuantity(item, currentQty + 1)} className={`w-8 h-8 flex items-center justify-center text-white rounded-lg transition-all active:scale-90 ${buttonColorClass}`}><Plus className="w-3.5 h-3.5" /></button>
+                      {/* --- REVISI: MINIMALIST QUANTITY SELECTOR --- */}
+                      <div className="flex items-center bg-white/10 backdrop-blur-md p-1 rounded-2xl border border-white/20 shadow-inner group/qty">
+                        {/* Tombol Kurangi */}
+                        <button 
+                          onClick={() => handleUpdateQuantity(item, currentQty - 1)}
+                          className={`w-9 h-9 flex items-center justify-center text-white rounded-xl transition-all active:scale-90 hover:brightness-110 shadow-sm ${buttonColorClass}`}
+                        >
+                          <Minus className="w-4 h-4" strokeWidth={3} />
+                        </button>
+
+                        {/* Input Angka (Support 3 Digit & Manual Type) */}
+                        <div className="relative flex items-center justify-center">
+                          <input 
+                            type="number"
+                            // FIX: Menggunakan currentQty langsung, jika 0 atau '' biarkan kosong saat fokus
+                            value={currentQty === 0 ? '' : currentQty}
+                            onInput={(e) => {
+                              const val = e.target.value;
+                              // Limit 3 digit dan cegah angka negatif
+                              if (val.length <= 3) {
+                                const parsedVal = val === '' ? 0 : parseInt(val);
+                                handleUpdateQuantity(item, parsedVal);
+                              }
+                            }}
+                            // Logika Blur: Jika kosong saat ditinggalkan, pastikan kembali ke 0
+                            onBlur={(e) => {
+                              if (e.target.value === '' || parseInt(e.target.value) < 0) {
+                                handleUpdateQuantity(item, 0);
+                              }
+                            }}
+                            className="bg-transparent font-black text-white text-[16px] w-14 text-center focus:outline-none placeholder-white/50 no-spinner appearance-none"
+                            placeholder="0"
+                          />
                         </div>
-                      ) : (
-                        <button onClick={() => handleUpdateQuantity(item, 1)} className={`text-white w-10 h-10 rounded-xl transition-all flex items-center justify-center active:scale-90 shadow-md ${buttonColorClass}`} disabled={item.stock === 0}><Plus className="w-5 h-5" strokeWidth={3} /></button>
-                      )}
+
+                        {/* Tombol Tambah */}
+                        <button 
+                          onClick={() => handleUpdateQuantity(item, currentQty + 1)}
+                          className={`w-9 h-9 flex items-center justify-center text-white rounded-xl transition-all active:scale-90 hover:brightness-110 shadow-sm ${buttonColorClass}`}
+                        >
+                          <Plus className="w-4 h-4" strokeWidth={3} />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
