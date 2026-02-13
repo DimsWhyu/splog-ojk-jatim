@@ -157,13 +157,11 @@ input, select, textarea {
   background-size: cover;
 }
 
-/* --- HILANGKAN SPINNER INPUT NUMBER (Minimalist Look) --- */
 .no-spinner::-webkit-inner-spin-button,
 .no-spinner::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
-
 .no-spinner {
-  -moz-appearance: textfield; /* Untuk Firefox */
+  -moz-appearance: textfield; /* Firefox */
 }
