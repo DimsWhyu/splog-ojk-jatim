@@ -88,7 +88,7 @@ const DashboardView = ({ requests, handleApproval, onViewDetails, setView }) => 
                   <Package className="w-4 h-4" /> Stok Barang
                 </button>
                 <button onClick={() => {setView('manage-users'); setIsMenuOpen(false);}} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-red-50 text-slate-600 hover:text-red-600 transition-all font-bold text-xs">
-                  <Settings className="w-4 h-4" /> Kelola User
+                  <Settings className="w-4 h-4" /> Kelola Akun
                 </button>
                 <hr className="my-2 border-slate-50" />
                 <button className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-red-600 font-bold text-xs hover:bg-red-50">

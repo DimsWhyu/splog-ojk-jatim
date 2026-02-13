@@ -100,9 +100,10 @@ const InventoryView = ({ inventory, addAmounts, handleAddAmountChange, validateS
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden relative border-separate">
-        <div className="max-h-[70vh] overflow-y-auto custom-scrollbar">
-          <table className="w-full text-left border-collapse">
+        <div className="max-h-[70vh] overflow-y-auto overflow-x-auto custom-scrollbar pb-2">
+          <table className="w-full text-left border-collapse min-w-[800px]">
             <thead className="sticky top-0 z-30 shadow-md">
+              <tbody className="divide-y divide-slate-50"></tbody>
               <tr className="bg-[#B91C1C] text-white">
                 <th className="px-6 py-3 text-[14px] font-bold capitalize tracking-tight text-center w-16 border-r border-red-800/50">No</th>
                 <th 
@@ -230,12 +231,23 @@ const InventoryView = ({ inventory, addAmounts, handleAddAmountChange, validateS
                           <input 
                             type="number" 
                             placeholder="0"
-                            className="w-20 bg-slate-50 border border-slate-200 text-center text-sm font-black text-slate-700 outline-none py-2 rounded-xl focus:bg-white focus:border-slate-400 transition-all"
+                            className="w-20 bg-slate-50 border border-slate-200 text-center text-sm font-black text-slate-700 outline-none py-2 rounded-xl focus:bg-white focus:border-slate-400 transition-all no-spinner"
                             value={addAmounts[item.id] || ''}
-                            onChange={(e) => handleAddAmountChange(item.id, e.target.value)}
+                            onChange={(e) => {
+                              const rawValue = e.target.value;
+
+                              if (rawValue === '' || rawValue === '-') {
+                                handleAddAmountChange(item.id, rawValue);
+                                return;
+                              }
+                              const val = parseInt(rawValue) || 0;
+                              const sanitizedVal = val < 0 ? Math.max(val, -item.stock) : val;
+                              
+                              handleAddAmountChange(item.id, sanitizedVal.toString());
+                            }}
                           />
                           <div className="absolute -top-2 -right-1">
-                             <span className="text-[8px] bg-slate-800 text-white px-1 rounded font-bold tracking-tighter">Qty</span>
+                            <span className="text-[8px] bg-slate-800 text-white px-1 rounded font-bold tracking-tighter">Qty</span>
                           </div>
                         </div>
 

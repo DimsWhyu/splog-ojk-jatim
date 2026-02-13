@@ -5,16 +5,17 @@ import {
   LayoutDashboard, 
   Archive,
   Users,
-  PlusCircle, // Icon untuk Tambah Barang
+  PlusCircle, 
   X,
   ChevronRight,
-  LogOut
+  LogOut,
+  ShoppingCart
 } from 'lucide-react';
 
 const Sidebar = ({ role, view, setView, isOpen, setIsOpen, currentUser, onLogout }) => {
   return (
     <>
-      {/* 1. BACKDROP: Area gelap transparan di belakang laci */}
+      {/* 1. BACKDROP: Area gelap transparan */}
       {isOpen && (
         <div 
           className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[150] lg:hidden animate-in fade-in duration-300"
@@ -22,7 +23,7 @@ const Sidebar = ({ role, view, setView, isOpen, setIsOpen, currentUser, onLogout
         />
       )}
 
-      {/* 2. SIDEBAR CONTAINER: Slide dari KIRI */}
+      {/* 2. SIDEBAR CONTAINER */}
       <aside className={`
         fixed lg:sticky top-0 lg:top-28 left-0 
         h-full lg:h-fit w-[280px] md:w-[320px] lg:w-72 
@@ -33,9 +34,8 @@ const Sidebar = ({ role, view, setView, isOpen, setIsOpen, currentUser, onLogout
         flex flex-col lg:block shadow-2xl lg:shadow-none
       `}>
         
-        {/* HEADER DRAWER (Gaya myITS - Hanya Mobile) */}
+        {/* HEADER DRAWER (Mobile Only) */}
         <div className="p-8 bg-gradient-to-br from-red-700 to-[#4a0404] text-white lg:hidden relative">
-          {/* Tombol Close Pojok Kanan Atas Drawer */}
           <button 
             onClick={() => setIsOpen(false)}
             className="absolute top-6 right-6 p-2 bg-white/10 rounded-xl hover:bg-white/20 transition-all"
@@ -48,7 +48,7 @@ const Sidebar = ({ role, view, setView, isOpen, setIsOpen, currentUser, onLogout
                {currentUser?.name?.substring(0, 1) || 'D'}
             </div>
             <h3 className="font-bold text-lg leading-tight truncate w-full">
-              {currentUser?.name || 'Dimas Wahyu Saputra'}
+              {currentUser?.name || 'User OJK'}
             </h3>
             <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 mt-1">
               {role} ACCESS • OJK JATIM
@@ -74,6 +74,17 @@ const Sidebar = ({ role, view, setView, isOpen, setIsOpen, currentUser, onLogout
                 <ChevronRight className={`w-4 h-4 lg:hidden ${view === 'catalog' ? 'opacity-100' : 'opacity-0'}`} />
               </button>
 
+              {/* --- REVISI: TAMBAH BUTTON KERANJANG UNTUK USER --- */}
+              <button 
+                onClick={() => { setView('cart'); setIsOpen(false); }}
+                className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl text-sm font-black transition-all ${
+                  view === 'cart' ? 'bg-red-600 text-white shadow-xl shadow-red-200' : 'text-slate-500 hover:bg-slate-50 hover:text-red-600'
+                }`}
+              >
+                <div className="flex items-center gap-4"><ShoppingCart className="w-5 h-5" /> Keranjang Saya</div>
+                <ChevronRight className={`w-4 h-4 lg:hidden ${view === 'cart' ? 'opacity-100' : 'opacity-0'}`} />
+              </button>
+
               <button 
                 onClick={() => { setView('history'); setIsOpen(false); }}
                 className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl text-sm font-black transition-all ${
@@ -86,7 +97,7 @@ const Sidebar = ({ role, view, setView, isOpen, setIsOpen, currentUser, onLogout
             </>
           ) : (
             <>
-              {/* NAVIGASI ADMIN (SINKRON & PROPOSIONAL) */}
+              {/* NAVIGASI ADMIN (Tetap Sama) */}
               <button 
                 onClick={() => { setView('dashboard'); setIsOpen(false); }}
                 className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl text-sm font-black transition-all ${
@@ -107,7 +118,6 @@ const Sidebar = ({ role, view, setView, isOpen, setIsOpen, currentUser, onLogout
                 <ChevronRight className={`w-4 h-4 lg:hidden ${view === 'admin-inventory' ? 'opacity-100' : 'opacity-0'}`} />
               </button>
 
-              {/* TOMBOL TAMBAH BARANG (BARU UNTUK ADMIN) */}
               <button 
                 onClick={() => { setView('add-item'); setIsOpen(false); }}
                 className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl text-sm font-black transition-all ${
@@ -124,14 +134,14 @@ const Sidebar = ({ role, view, setView, isOpen, setIsOpen, currentUser, onLogout
                   view === 'manage-users' ? 'bg-red-600 text-white shadow-xl shadow-red-200' : 'text-slate-500 hover:bg-slate-50 hover:text-red-600'
                 }`}
               >
-                <div className="flex items-center gap-4"><Users className="w-5 h-5" /> Kelola User</div>
+                <div className="flex items-center gap-4"><Users className="w-5 h-5" /> Kelola Akun</div>
                 <ChevronRight className={`w-4 h-4 lg:hidden ${view === 'manage-users' ? 'opacity-100' : 'opacity-0'}`} />
               </button>
             </>
           )}
         </div>
 
-        {/* 3. FOOTER DRAWER: Tombol Logout Khusus Mobile */}
+        {/* 3. FOOTER DRAWER */}
         <div className="p-6 border-t border-slate-50 lg:hidden mt-auto">
           <button 
             onClick={() => { onLogout(); setIsOpen(false); }} 
