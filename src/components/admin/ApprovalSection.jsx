@@ -12,7 +12,7 @@ const ApprovalSection = ({ requests, handleApproval, onViewDetails }) => {
   };
 
   return (
-    <div className="bg-white rounded-[20px] border border-slate-100 overflow-hidden shadow-2xl shadow-slate-200/50 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="bg-white rounded-[13px] border border-slate-100 overflow-hidden shadow-2xl shadow-slate-200/50 animate-in fade-in slide-in-from-bottom-4 duration-700">
       
       {/* 1. HEADER SECTION (MAROON STYLE) */}
       <div className="p-6 bg-[#B91C1C] text-white flex justify-between items-center relative overflow-hidden">

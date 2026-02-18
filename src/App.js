@@ -10,11 +10,12 @@ import DashboardView from './components/admin/DashboardView';
 import InventoryView from './components/admin/InventoryView';
 import AddItemView from './components/admin/AddItemView';
 import CreateUserView from './components/admin/CreateUserView';
-import LoginView from './components/common/LoginView'; 
+import LoginView from './components/common/LoginView';
+import AnalyticsDashboard from './components/admin/AnalyticsDashboard'; 
 import { CartProvider, useCart } from './context/CartContext';
 import './App.css';
 
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxjamHFtqzag-LYmT_Yh4AIfjAI156KSpuGVQGbXGbmgevVttXprl77mmGrqigO7nbW/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyaE1LNFWfwDaWbuUwTvFSUZ-O3ARgprfrK7UFJpR5cunMIvj1xDvNb0JavymGhTh7W/exec";
 
 const INITIAL_REQUESTS = [];
 
@@ -44,7 +45,6 @@ const AppContent = () => {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [cancelModal, setCancelModal] = useState({ show: false, request: null });
 
-  // --- PENYESUAIAN 1: STATE UNTUK DRAWER MOBILE ---
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -58,7 +58,6 @@ const AppContent = () => {
 
   const { cart, clearCart, addToCart: addToCartContext, updateCartQty, getCartItem } = useCart();
   
-  // --- REVISI: FUNGSI fetchAllData UNTUK SINKRONISASI RIWAYAT ---
   const fetchAllData = async () => {
       try {
         const response = await fetch(WEB_APP_URL); 
@@ -71,10 +70,8 @@ const AppContent = () => {
         }));
         setInventory(formattedInventory);
 
-        // --- REVISI App.js (Bagian fetchAllData) ---
         if (data.history) {
           const formattedHistory = data.history.map(h => {
-            // Sesuaikan mapping dengan safeKey (huruf kecil semua, tanpa spasi/titik)
             const summaryStr = h.detailbarang || h["detailbarang"] || "";
             
             const itemsDetailArray = summaryStr.split(', ').map(part => {
@@ -93,20 +90,18 @@ const AppContent = () => {
               };
             }).filter(Boolean);
 
-            // Ambil data menggunakan Safe Key yang konsisten
             return {
-              id: h.noreferensi || h["noreferensi"], // Dari "No. Referensi"
-              user: h.namapengaju || h["namapengaju"], // Dari "Nama Pengaju"
-              date: h.tanggalpengajuan || h.tanggal || h["tanggal"], // Dari "Tanggal Pengajuan"
-              note: h.tujuankebutuhan || h.tujuan || h["tujuan"], // Dari "Tujuan Kebutuhan"
-              status: h.statusverifikasi || h.status || h["status"], // Dari "Status Verifikasi"
+              id: h.noreferensi || h["noreferensi"],
+              user: h.namapengaju || h["namapengaju"], 
+              date: h.tanggalpengajuan || h.tanggal || h["tanggal"], 
+              note: h.tujuankebutuhan || h.tujuan || h["tujuan"], 
+              status: h.statusverifikasi || h.status || h["status"], 
               itemsDetail: itemsDetailArray 
             };
           });
           setRequests(formattedHistory);
         }
 
-        // Logika session login tetap sama...
         const savedUser = localStorage.getItem('splog_session');
         if (savedUser) {
           const userData = JSON.parse(savedUser);
@@ -204,24 +199,17 @@ const AppContent = () => {
 
   const handleAddItem = async (newItem) => {
     try {
-      // 1. Kirim data (image berisi Base64 dari input URL) ke Apps Script
       await fetch(WEB_APP_URL, {
         method: "POST",
         mode: "no-cors",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           action: "addItem", 
-          ...newItem // Di sini imageUrl akan diproses oleh macro.gs menjadi Link Drive
+          ...newItem 
         }),
       });
-
-      // 2. Berikan feedback instan di layar
       setInventory(prev => [...prev, newItem]);
-      
-      // 3. PENTING: Tunggu 3 detik agar Google Drive selesai memproses file, 
-      // lalu ambil data terbaru untuk mengganti Base64 dengan URL asli yang ringan
       setTimeout(() => fetchAllData(), 3000); 
-
       return true;
     } catch (error) {
       console.error("Gagal menyimpan barang:", error);
@@ -312,7 +300,6 @@ const AppContent = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-batik-ojk font-sans text-slate-800 animate-content-fade">
-      {/* UPDATE: Kirim state drawer ke Navbar */}
       <Navbar 
         role={role} 
         currentUser={currentUser} 
@@ -326,7 +313,6 @@ const AppContent = () => {
       />
 
       <div className="flex-1 max-w-[1440px] mx-auto px-4 lg:px-10 py-8 flex gap-10 w-full items-start relative">
-        {/* UPDATE: Kirim state drawer ke Sidebar */}
         <Sidebar 
           role={role} 
           view={view} 
@@ -342,13 +328,9 @@ const AppContent = () => {
           {role === 'user' && view === 'history' && (
             <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
               <h3 className="text-2xl font-bold text-slate-800 tracking-tight">Riwayat Pengajuan</h3>
-              
-              {/* --- REVISI: Tambahkan max-h dan overflow-y agar bisa di-scroll --- */}
               <div className="bg-white rounded-[17px] border border-slate-100 shadow-2xl shadow-slate-200/40 overflow-hidden relative">
                 <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
                   <table className="w-full text-left border-collapse">
-                    
-                    {/* --- REVISI: Tambahkan sticky top-0 dan warna bg-slate-800 (OJK Style) --- */}
                     <thead className="sticky top-0 z-20 bg-slate-800 text-white text-[13px] font-black shadow-md">
                       <tr>
                         <th className="px-6 py-5 border-b border-slate-700">No. Referensi</th>
@@ -358,7 +340,6 @@ const AppContent = () => {
                         <th className="px-6 py-5 border-b border-slate-700 text-center">Aksi</th>
                       </tr>
                     </thead>
-
                     <tbody className="divide-y divide-slate-50">
                       {requests
                         .filter(req => req.user === currentUser?.name)
@@ -386,13 +367,16 @@ const AppContent = () => {
           )}
           {role === 'admin' && view === 'dashboard' && <DashboardView requests={requests} inventory={inventory} handleApproval={handleApproval} onViewDetails={setSelectedRequest}/>}
           {role === 'admin' && view === 'admin-inventory' && <InventoryView inventory={inventory} addAmounts={addAmounts} handleAddAmountChange={handleAddAmountChange} validateStockAddition={validateStockAddition} handleUpdateItem={handleUpdateItem} handleDeleteItem={handleDeleteItem} />}
-          
-          {/* REVISI 3: Render View Baru */}
-          {role === 'admin' && view === 'add-item' && (
-            <AddItemView inventory={inventory} onAddItem={handleAddItem} onCancel={() => setView('admin-inventory')} />
-          )}
-
+          {role === 'admin' && view === 'add-item' && <AddItemView inventory={inventory} onAddItem={handleAddItem} onCancel={() => setView('admin-inventory')} />}
           {role === 'admin' && view === 'manage-users' && <CreateUserView validUsers={validUsers} WEB_APP_URL={WEB_APP_URL} fetchAllData={fetchAllData} />}
+          
+          {/* --- PENYESUAIAN 2: RENDER DASHBOARD ANALYSIS --- */}
+          {role === 'admin' && view === 'analytics' && (
+            <AnalyticsDashboard 
+              requests={requests} 
+              inventory={inventory} 
+            />
+          )}
         </main>
       </div>
 
@@ -436,15 +420,9 @@ const AppContent = () => {
                 <div className="mt-1 flex-shrink-0">
                   <Hash className="w-4 h-4 text-red-600" />
                 </div>
-                {/* REVISI: Tambahkan flex-1 dan min-w-0 agar container bisa mengecil */}
                 <div className="flex-1 min-w-0"> 
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
-                    Tujuan / Justifikasi Pengajuan:
-                  </p>
-                  {/* REVISI: Tambahkan break-words dan whitespace-pre-wrap */}
-                  <p className="text-sm font-bold text-slate-600 italic leading-relaxed break-words whitespace-pre-wrap">
-                    "{selectedRequest.note || "Tanpa Catatan"}"
-                  </p>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Tujuan / Justifikasi Pengajuan:</p>
+                  <p className="text-sm font-bold text-slate-600 italic leading-relaxed break-words whitespace-pre-wrap">"{selectedRequest.note || "Tanpa Catatan"}"</p>
                 </div>
               </div>
             </div>
@@ -480,7 +458,6 @@ const AppContent = () => {
       )}
       
       <Footer />
-      {}
     </div>
   );
 };

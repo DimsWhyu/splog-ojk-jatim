@@ -9,7 +9,8 @@ import {
   X,
   ChevronRight,
   LogOut,
-  ShoppingCart
+  ShoppingCart,
+  TrendingUp // TAMBAHKAN: Ikon untuk dashboard analisis
 } from 'lucide-react';
 
 const Sidebar = ({ role, view, setView, isOpen, setIsOpen, currentUser, onLogout }) => {
@@ -74,7 +75,6 @@ const Sidebar = ({ role, view, setView, isOpen, setIsOpen, currentUser, onLogout
                 <ChevronRight className={`w-4 h-4 lg:hidden ${view === 'catalog' ? 'opacity-100' : 'opacity-0'}`} />
               </button>
 
-              {/* --- REVISI: TAMBAH BUTTON KERANJANG UNTUK USER --- */}
               <button 
                 onClick={() => { setView('cart'); setIsOpen(false); }}
                 className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl text-sm font-black transition-all ${
@@ -97,7 +97,7 @@ const Sidebar = ({ role, view, setView, isOpen, setIsOpen, currentUser, onLogout
             </>
           ) : (
             <>
-              {/* NAVIGASI ADMIN (Tetap Sama) */}
+              {/* NAVIGASI ADMIN */}
               <button 
                 onClick={() => { setView('dashboard'); setIsOpen(false); }}
                 className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl text-sm font-black transition-all ${
@@ -106,6 +106,17 @@ const Sidebar = ({ role, view, setView, isOpen, setIsOpen, currentUser, onLogout
               >
                 <div className="flex items-center gap-4"><LayoutDashboard className="w-5 h-5" /> Panel Dashboard</div>
                 <ChevronRight className={`w-4 h-4 lg:hidden ${view === 'dashboard' ? 'opacity-100' : 'opacity-0'}`} />
+              </button>
+
+              {/* --- REVISI: TAMBAHKAN BUTTON ANALYTICS UNTUK ADMIN --- */}
+              <button 
+                onClick={() => { setView('analytics'); setIsOpen(false); }}
+                className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl text-sm font-black transition-all ${
+                  view === 'analytics' ? 'bg-red-600 text-white shadow-xl shadow-red-200' : 'text-slate-500 hover:bg-slate-50 hover:text-red-600'
+                }`}
+              >
+                <div className="flex items-center gap-4"><TrendingUp className="w-5 h-5" /> Panel Analytics</div>
+                <ChevronRight className={`w-4 h-4 lg:hidden ${view === 'analytics' ? 'opacity-100' : 'opacity-0'}`} />
               </button>
 
               <button 

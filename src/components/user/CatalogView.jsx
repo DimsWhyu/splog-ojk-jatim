@@ -113,7 +113,7 @@ const CatalogView = ({ inventory, filteredItems, activeCategory, setActiveCatego
             yang menutup area transparan di luar rounded corner.
         */}
         
-        <div className="bg-white rounded-[20px] p-6 shadow-sm border border-slate-100 space-y-6 mt-4">
+        <div className="bg-white rounded-[13px] p-6 shadow-sm border border-slate-100 space-y-6 mt-4">
           <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-start gap-4">
               {/* Header Shape Aksen Merah OJK */}
@@ -131,7 +131,7 @@ const CatalogView = ({ inventory, filteredItems, activeCategory, setActiveCatego
           </header>
 
           {/* CATEGORY NAVIGATION DENGAN SCROLLBAR */}
-          <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-[20px] border border-slate-100 shadow-inner overflow-x-auto max-w-full custom-scrollbar pb-3">
+          <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-[13px] border border-slate-100 shadow-inner overflow-x-auto max-w-full custom-scrollbar pb-3">
             <div className="flex flex-nowrap items-stretch gap-1.5">
               {dynamicCategories.map(cat => (
                 <button 

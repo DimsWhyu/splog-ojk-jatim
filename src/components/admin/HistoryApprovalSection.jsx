@@ -5,7 +5,7 @@ const HistoryApprovalSection = ({ requests }) => {
   const completedRequests = requests.filter(r => r.status !== 'Menunggu');
 
   return (
-    <div className="bg-white rounded-[20px] border border-slate-100 overflow-hidden shadow-sm">
+    <div className="bg-white rounded-[13px] border border-slate-100 overflow-hidden shadow-sm">
       <div className="p-8 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
         <div className="flex items-center gap-3">
           <span className="text-xs font-black text-slate-500 uppercase tracking-[0.2em]">Riwayat Aktivitas Persetujuan</span>

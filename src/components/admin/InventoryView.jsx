@@ -274,7 +274,7 @@ const InventoryView = ({ inventory, addAmounts, handleAddAmountChange, validateS
           {/* Overlay Fullscreen total dengan Backdrop Blur pekat */}
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md animate-fade-in" onClick={() => setIsEditModalOpen(false)}></div>
           
-          <div className="relative z-10 bg-white rounded-[20px] shadow-2xl w-full max-w-lg overflow-hidden animate-modal-pop border border-white/20">
+          <div className="relative z-10 bg-white rounded-[13px] shadow-2xl w-full max-w-lg overflow-hidden animate-modal-pop border border-white/20">
             <div className="bg-gradient-to-r from-red-600 to-[#4a0404] p-8 text-white">
               <div className="flex justify-between items-center">
                 <div>
@@ -293,7 +293,7 @@ const InventoryView = ({ inventory, addAmounts, handleAddAmountChange, validateS
                   <label className="text-[13px] font-bold text-slate-400 tracking-tight ml-1">Nama Barang</label>
                   <input 
                     type="text" 
-                    className="w-full mt-1.5 px-5 py-4 bg-slate-50 border border-slate-100 rounded-[20px] text-sm font-bold focus:bg-white focus:ring-2 focus:ring-red-100 outline-none transition-all"
+                    className="w-full mt-1.5 px-5 py-4 bg-slate-50 border border-slate-100 rounded-[13px] text-sm font-bold focus:bg-white focus:ring-2 focus:ring-red-100 outline-none transition-all"
                     value={editingItem?.name}
                     onChange={(e) => setEditingItem({...editingItem, name: e.target.value})}
                   />
@@ -302,7 +302,7 @@ const InventoryView = ({ inventory, addAmounts, handleAddAmountChange, validateS
                   <label className="text-[13px] font-bold text-slate-400 tracking-tight ml-1">Kode Barang</label>
                   <input 
                     type="text" 
-                    className="w-full mt-1.5 px-5 py-4 bg-slate-50 border border-slate-100 rounded-[20px] text-sm font-bold focus:bg-white focus:ring-2 focus:ring-red-100 outline-none transition-all"
+                    className="w-full mt-1.5 px-5 py-4 bg-slate-50 border border-slate-100 rounded-[13px] text-sm font-bold focus:bg-white focus:ring-2 focus:ring-red-100 outline-none transition-all"
                     value={editingItem?.code}
                     onChange={(e) => setEditingItem({...editingItem, code: e.target.value})}
                   />
@@ -310,12 +310,12 @@ const InventoryView = ({ inventory, addAmounts, handleAddAmountChange, validateS
                 <div>
                   <label className="text-[13px] font-bold text-slate-400 tracking-tight ml-1">URL Gambar (Link)</label>
                   <div className="flex gap-4 mt-1.5">
-                    <div className="w-16 h-16 rounded-[20px] bg-slate-50 border-2 border-dashed border-slate-200 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                    <div className="w-16 h-16 rounded-[13px] bg-slate-50 border-2 border-dashed border-slate-200 overflow-hidden flex-shrink-0 flex items-center justify-center">
                       <img src={editingItem?.image} alt="" className="w-full h-full object-cover" />
                     </div>
                     <input 
                       type="text" 
-                      className="flex-1 px-5 py-4 bg-slate-50 border border-slate-100 rounded-[20px] text-[13px] font-medium text-slate-500 focus:bg-white outline-none transition-all"
+                      className="flex-1 px-5 py-4 bg-slate-50 border border-slate-100 rounded-[13px] text-[13px] font-medium text-slate-500 focus:bg-white outline-none transition-all"
                       value={editingItem?.image}
                       onChange={(e) => setEditingItem({...editingItem, image: e.target.value})}
                     />
@@ -362,7 +362,7 @@ const InventoryView = ({ inventory, addAmounts, handleAddAmountChange, validateS
           {/* Backdrop Blur Fullscreen Total */}
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md animate-fade-in" onClick={() => setIsDeleteModalOpen(false)}></div>
           
-          <div className="relative z-50 bg-white rounded-[20px] shadow-2xl w-full max-w-sm overflow-hidden animate-modal-pop text-center p-10 border border-red-50">
+          <div className="relative z-50 bg-white rounded-[13px] shadow-2xl w-full max-w-sm overflow-hidden animate-modal-pop text-center p-10 border border-red-50">
             <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
               <AlertTriangle className="w-12 h-12 text-red-600 animate-bounce" />
             </div>
