@@ -252,7 +252,7 @@ const AnalyticsDashboard = ({ requests, inventory }) => {
 
     doc.save(`Laporan_Logistik_OJK_${new Date().getTime()}.pdf`);
   };
-
+  
   const resetFilters = () => { setStartDate(''); setEndDate(''); setSelectedCategories([]); setSelectedStatus('Semua'); };
 
   return (
