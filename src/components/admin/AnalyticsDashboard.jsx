@@ -9,7 +9,6 @@ import {
   Users, ChevronDown, Check, ChevronLeft, ChevronRight,
   Layers, Activity, RotateCcw, Target, FileSpreadsheet
 } from 'lucide-react';
-import * as XLSX from 'xlsx';
 
 // --- MAPPING HEX COLORS ---
 const getThemeHex = (cat) => {
@@ -172,84 +171,6 @@ const AnalyticsDashboard = ({ requests, inventory }) => {
 
   useEffect(() => { regenerateAI(); }, [regenerateAI]);
 
-  // --- ENHANCED EXPORT EXCEL ---
-  const handleExportExcel = () => {
-    const wb = XLSX.utils.book_new();
-    
-    // 1. DATA UNTUK SHEET 1: RINGKASAN & INSIGHT
-    const totalQty = stats.items.reduce((acc, curr) => acc + curr.qty, 0);
-    const avgItemsPerReq = filteredData.length > 0 ? (totalQty / filteredData.length).toFixed(2) : 0;
-
-    const summaryData = [
-      ["LAPORAN EKSEKUTIF ANALISIS INVENTARIS & LOGISTIK"],
-      ["OTORITAS JASA KEUANGAN (OJK) PROVINSI JAWA TIMUR"],
-      ["Tanggal Ekspor", new Date().toLocaleString('id-ID')],
-      ["Periode Laporan", `${startDate || 'Awal'} s/d ${endDate || 'Terbaru'}`],
-      [],
-      ["I. HIGHLIGHT KPI UTAMA"],
-      ["Metrik", "Nilai", "Satuan", "Keterangan"],
-      ["Total Pengajuan", filteredData.length, "Transaksi", "Jumlah formulir yang diproses"],
-      ["Total Item Terdistribusi", totalQty, "Unit", "Total kuantitas seluruh item"],
-      ["Rata-rata Item/Pengajuan", avgItemsPerReq, "Unit/Req", "Intensitas barang per transaksi"],
-      ["Titik Puncak Aktivitas", stats.peakDate?.date || "-", "Tanggal", `Volume tertinggi: ${stats.peakDate?.count || 0} req`],
-      [],
-      ["II. RINGKASAN AI (EXECUTIVE SUMMARY)"],
-      [aiText],
-      [],
-      ["III. ANALISIS PER KATEGORI"],
-      ["Nama Kategori", "Total Unit Keluar", "Persentase (%)"],
-    ];
-
-    // Menghitung persentase kategori
-    stats.category.forEach(c => {
-      const percentage = ((c.value / totalQty) * 100).toFixed(1);
-      summaryData.push([c.name, c.value, `${percentage}%`]);
-    });
-
-    summaryData.push([], ["IV. TOP 10 ITEM PALING DIBUTUHKAN (HIGH TURNOVER)"], ["Nama Item", "Total Kuantitas", "Status"]);
-    stats.items.slice(0, 10).forEach(item => {
-      summaryData.push([item.name, item.qty, item.qty > 50 ? "Sangat Tinggi" : "Normal"]);
-    });
-
-    summaryData.push([], ["V. INTENSITAS PENGGUNA (TOP USERS)"], ["Nama Pegawai", "Jumlah Pengajuan"]);
-    stats.user.forEach(u => summaryData.push([u.name, u.count]));
-
-    const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
-
-    // 2. DATA UNTUK SHEET 2: DETAIL TRANSAKSI GRANULAR
-    // Kita lakukan "flattening" data karena satu pengajuan bisa berisi banyak item
-    const detailedRows = [];
-    filteredData.forEach((req) => {
-      req.itemsDetail.forEach((item) => {
-        detailedRows.push({
-          "ID Pengajuan": req.id || "-",
-          "Tanggal": req.date,
-          "Nama Pengaju": req.user,
-          "Kategori Barang": item.category,
-          "Nama Barang": item.name,
-          "Jumlah (Unit)": Number(item.quantity),
-          "Status Approval": req.status,
-          "Catatan": req.notes || "-"
-        });
-      });
-    });
-
-    const wsDetail = XLSX.utils.json_to_sheet(detailedRows);
-
-    // Mengatur lebar kolom otomatis sederhana untuk Sheet Detail
-    const wscols = [
-      {wch: 15}, {wch: 15}, {wch: 25}, {wch: 20}, {wch: 20}, {wch: 30}, {wch: 12}, {wch: 15}, {wch: 30}
-    ];
-    wsDetail['!cols'] = wscols;
-
-    // Masukkan sheet ke dalam workbook
-    XLSX.utils.book_append_sheet(wb, wsSummary, "Ringkasan Analisis");
-    XLSX.utils.book_append_sheet(wb, wsDetail, "Detail Pengajuan Item");
-
-    // Simpan file
-    XLSX.writeFile(wb, `Laporan_Logistik_OJKJatim_${new Date().toISOString().split('T')[0]}.xlsx`);
-  };
-
   const resetFilters = () => { setStartDate(''); setEndDate(''); setSelectedCategories([]); setSelectedStatus('Semua'); };
 
   return (
@@ -265,9 +186,6 @@ const AnalyticsDashboard = ({ requests, inventory }) => {
         </div>
         
         <div className="flex items-center gap-3">
-            <button onClick={handleExportExcel} className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white hover:bg-emerald-700 rounded-[13px] font-black text-[11px] uppercase tracking-tight transition-all shadow-md active:scale-95">
-                <FileSpreadsheet className="w-4 h-4" /> Export Excel
-            </button>
             <div className="w-[1px] h-6 bg-slate-200 mx-1" />
             <button type="button" onClick={resetFilters} className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-[13px] font-black text-[11px] uppercase tracking-tight transition-all border border-slate-200">
                 <RotateCcw className="w-3.5 h-3.5" /> Reset Filter
