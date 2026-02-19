@@ -7,8 +7,11 @@ import {
 import {
   Calendar, TrendingUp, Package,
   Users, ChevronDown, Check, ChevronLeft, ChevronRight,
-  Layers, Activity, RotateCcw, Target
+  Layers, Activity, RotateCcw, Target, FileSpreadsheet, FileText
 } from 'lucide-react';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 // --- MAPPING HEX COLORS ---
 const getThemeHex = (cat) => {
@@ -171,6 +174,189 @@ const AnalyticsDashboard = ({ requests, inventory }) => {
 
   useEffect(() => { regenerateAI(); }, [regenerateAI]);
 
+  // --- ENHANCED EXPORT EXCEL ---
+  const handleExportExcel = () => {
+    const wb = XLSX.utils.book_new();
+    
+    // 1. DATA UNTUK SHEET 1: RINGKASAN & INSIGHT
+    const totalQty = stats.items.reduce((acc, curr) => acc + curr.qty, 0);
+    const avgItemsPerReq = filteredData.length > 0 ? (totalQty / filteredData.length).toFixed(2) : 0;
+
+    const summaryData = [
+      ["LAPORAN EKSEKUTIF ANALISIS INVENTARIS & LOGISTIK"],
+      ["OTORITAS JASA KEUANGAN (OJK) PROVINSI JAWA TIMUR"],
+      ["Tanggal Ekspor", new Date().toLocaleString('id-ID')],
+      ["Periode Laporan", `${startDate || 'Awal'} s/d ${endDate || 'Terbaru'}`],
+      [],
+      ["I. HIGHLIGHT KPI UTAMA"],
+      ["Metrik", "Nilai", "Satuan", "Keterangan"],
+      ["Total Pengajuan", filteredData.length, "Transaksi", "Jumlah formulir yang diproses"],
+      ["Total Item Terdistribusi", totalQty, "Unit", "Total kuantitas seluruh item"],
+      ["Rata-rata Item/Pengajuan", avgItemsPerReq, "Unit/Req", "Intensitas barang per transaksi"],
+      ["Titik Puncak Aktivitas", stats.peakDate?.date || "-", "Tanggal", `Volume tertinggi: ${stats.peakDate?.count || 0} req`],
+      [],
+      ["II. RINGKASAN AI (EXECUTIVE SUMMARY)"],
+      [aiText],
+      [],
+      ["III. ANALISIS PER KATEGORI"],
+      ["Nama Kategori", "Total Unit Keluar", "Persentase (%)"],
+    ];
+
+    // Menghitung persentase kategori
+    stats.category.forEach(c => {
+      const percentage = ((c.value / totalQty) * 100).toFixed(1);
+      summaryData.push([c.name, c.value, `${percentage}%`]);
+    });
+
+    summaryData.push([], ["IV. TOP 10 ITEM PALING DIBUTUHKAN (HIGH TURNOVER)"], ["Nama Item", "Total Kuantitas", "Status"]);
+    stats.items.slice(0, 10).forEach(item => {
+      summaryData.push([item.name, item.qty, item.qty > 50 ? "Sangat Tinggi" : "Normal"]);
+    });
+
+    summaryData.push([], ["V. INTENSITAS PENGGUNA (TOP USERS)"], ["Nama Pegawai", "Jumlah Pengajuan"]);
+    stats.user.forEach(u => summaryData.push([u.name, u.count]));
+
+    const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+
+    // 2. DATA UNTUK SHEET 2: DETAIL TRANSAKSI GRANULAR
+    // Kita lakukan "flattening" data karena satu pengajuan bisa berisi banyak item
+    const detailedRows = [];
+    filteredData.forEach((req) => {
+      req.itemsDetail.forEach((item) => {
+        detailedRows.push({
+          "ID Pengajuan": req.id || "-",
+          "Tanggal": req.date,
+          "Nama Pengaju": req.user,
+          "Kategori Barang": item.category,
+          "Nama Barang": item.name,
+          "Jumlah (Unit)": Number(item.quantity),
+          "Status Approval": req.status,
+          "Catatan": req.notes || "-"
+        });
+      });
+    });
+
+    const wsDetail = XLSX.utils.json_to_sheet(detailedRows);
+
+    // Mengatur lebar kolom otomatis sederhana untuk Sheet Detail
+    const wscols = [
+      {wch: 15}, {wch: 15}, {wch: 25}, {wch: 20}, {wch: 20}, {wch: 30}, {wch: 12}, {wch: 15}, {wch: 30}
+    ];
+    wsDetail['!cols'] = wscols;
+
+    // Masukkan sheet ke dalam workbook
+    XLSX.utils.book_append_sheet(wb, wsSummary, "Ringkasan Analisis");
+    XLSX.utils.book_append_sheet(wb, wsDetail, "Detail Pengajuan Item");
+
+    // Simpan file
+    XLSX.writeFile(wb, `Laporan_Logistik_OJKJatim_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
+  // --- EXPORT PDF DENGAN LOGO & TATA LETAK PROFESIONAL ---
+  const handleExportPDF = async () => {
+    const doc = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const centerX = pageWidth / 2;
+    let currentY = 20;
+
+    const addPageHeader = (title) => {
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(150, 150, 150);
+        doc.text("Sistem Pengelolaan Logistik (SPLOG) - OJK JATIM", 15, 10);
+        doc.setDrawColor(220, 220, 220);
+        doc.line(15, 12, pageWidth - 15, 12);
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(30, 41, 59);
+        doc.text(title, centerX, 25, { align: 'center' });
+        return 35;
+    };
+
+    // HALAMAN 1: COVER
+    const logoUrl = "https://upload.wikimedia.org/wikipedia/commons/8/83/OJK_Logo.png";
+    try { doc.addImage(logoUrl, 'PNG', centerX - 25, currentY, 50, 18); } catch (e) { console.error(e); }
+    currentY += 30;
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(185, 28, 28);
+    doc.text("LAPORAN REKAPITULASI ANALISIS LOGISTIK", centerX, currentY, { align: 'center' });
+    currentY += 8;
+    doc.text("OJK PROVINSI JAWA TIMUR", centerX, currentY, { align: 'center' });
+    currentY += 12;
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Periode Laporan: ${startDate || 'Semua Waktu'} s/d ${endDate || 'Hari Ini'}`, centerX, currentY, { align: 'center' });
+    currentY += 25;
+    doc.setFillColor(248, 250, 252);
+    doc.roundedRect(15, currentY, pageWidth - 30, 60, 3, 3, 'F');
+    currentY += 10;
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(185, 28, 28);
+    doc.text("RINGKASAN EKSEKUTIF (AI INSIGHTS)", 25, currentY);
+    currentY += 8;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'italic');
+    doc.setTextColor(71, 85, 105);
+    doc.text(doc.splitTextToSize(aiText, pageWidth - 50), 25, currentY);
+
+    // HALAMAN 2: TREN
+    doc.addPage();
+    currentY = addPageHeader("1. ANALISIS TREN PERMINTAAN");
+    if (areaChartRef.current) {
+        const canvas = await html2canvas(areaChartRef.current, { scale: 2 });
+        doc.addImage(canvas.toDataURL('image/png'), 'PNG', 15, currentY, 180, 80);
+        currentY += 90;
+    }
+    doc.setFontSize(11); doc.setFont('helvetica', 'bold'); doc.text("Interpretasi Mendalam:", 15, currentY);
+    currentY += 7; doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+    const trenText = `Grafik menunjukkan pola permintaan logistik harian. Puncak aktivitas tertinggi tercatat pada ${stats.peakDate?.date || '-'} dengan ${stats.peakDate?.count || 0} pengajuan. Fluktuasi ini mengindikasikan periode sibuk kantor yang memerlukan kesiapan stok ekstra di awal minggu atau bulan untuk menjamin kelancaran administrasi.`;
+    doc.text(doc.splitTextToSize(trenText, pageWidth - 30), 15, currentY);
+
+    // HALAMAN 3: PIE
+    doc.addPage();
+    currentY = addPageHeader("2. ANALISIS PROPORSI KATEGORI");
+    if (pieChartRef.current) {
+        const canvas = await html2canvas(pieChartRef.current, { scale: 2 });
+        doc.addImage(canvas.toDataURL('image/png'), 'PNG', 45, currentY, 120, 100);
+        currentY += 110;
+    }
+    doc.setFontSize(11); doc.setFont('helvetica', 'bold'); doc.text("Interpretasi Mendalam:", 15, currentY);
+    currentY += 7; doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+    const catText = `Kategori '${stats.topCat}' mendominasi volume pengeluaran barang. Hal ini mencerminkan kebutuhan operasional utama OJK Jatim pada periode ini. Disarankan untuk mengevaluasi vendor penyedia kategori ini guna mendapatkan harga yang lebih kompetitif melalui pembelian skala besar (bulk buying).`;
+    doc.text(doc.splitTextToSize(catText, pageWidth - 30), 15, currentY);
+
+    // HALAMAN 4: USER
+    doc.addPage();
+    currentY = addPageHeader("3. INTENSITAS PENGGUNA AKTIF");
+    if (userBarRef.current) {
+        const canvas = await html2canvas(userBarRef.current, { scale: 2 });
+        doc.addImage(canvas.toDataURL('image/png'), 'PNG', 15, currentY, 180, 90);
+        currentY += 100;
+    }
+    doc.setFontSize(11); doc.setFont('helvetica', 'bold'); doc.text("Interpretasi Mendalam:", 15, currentY);
+    currentY += 7; doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+    const userText = `Pengguna '${stats.topUser?.name || '-'}' merupakan pemohon paling intensif dengan ${stats.topUser?.count || 0} kali transaksi. Data ini membantu manajemen dalam memetakan beban kerja distribusi logistik antar unit kerja agar pengalokasian sumber daya menjadi lebih merata dan efisien.`;
+    doc.text(doc.splitTextToSize(userText, pageWidth - 30), 15, currentY);
+
+    // HALAMAN 5: ITEM
+    doc.addPage();
+    currentY = addPageHeader("4. ANALISIS VOLUME ITEM SPESIFIK");
+    if (itemBarRef.current) {
+        const canvas = await html2canvas(itemBarRef.current, { scale: 2 });
+        doc.addImage(canvas.toDataURL('image/png'), 'PNG', 15, currentY, 180, 110);
+        currentY += 120;
+    }
+    doc.setFontSize(11); doc.setFont('helvetica', 'bold'); doc.text("Interpretasi Mendalam:", 15, currentY);
+    currentY += 7; doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+    const itemText = `Item '${stats.items[0]?.name || '-'}' memiliki turnover tertinggi sebesar ${stats.items[0]?.qty || 0} unit. Pemantauan stok pengamanan (safety stock) harus diprioritaskan pada item ini untuk mencegah 'out-of-stock' yang dapat menghambat aktivitas perkantoran yang bersifat esensial.`;
+    doc.text(doc.splitTextToSize(itemText, pageWidth - 30), 15, currentY);
+
+    doc.save(`Laporan_Logistik_OJK_Jatim_${new Date().getTime()}.pdf`);
+  };
+
   const resetFilters = () => { setStartDate(''); setEndDate(''); setSelectedCategories([]); setSelectedStatus('Semua'); };
 
   return (
@@ -186,6 +372,12 @@ const AnalyticsDashboard = ({ requests, inventory }) => {
         </div>
         
         <div className="flex items-center gap-3">
+            <button onClick={handleExportExcel} className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white hover:bg-emerald-700 rounded-[13px] font-black text-[11px] uppercase tracking-tight transition-all shadow-md active:scale-95">
+                <FileSpreadsheet className="w-4 h-4" /> Export Excel
+            </button>
+            <button onClick={handleExportPDF} className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white hover:bg-slate-900 rounded-[13px] font-black text-[11px] uppercase tracking-tight transition-all shadow-md active:scale-95">
+                <FileText className="w-4 h-4" /> Export PDF
+            </button>
             <div className="w-[1px] h-6 bg-slate-200 mx-1" />
             <button type="button" onClick={resetFilters} className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-[13px] font-black text-[11px] uppercase tracking-tight transition-all border border-slate-200">
                 <RotateCcw className="w-3.5 h-3.5" /> Reset Filter
