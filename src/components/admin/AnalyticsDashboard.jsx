@@ -309,7 +309,7 @@ const AnalyticsDashboard = ({ requests, inventory }) => {
     };
 
     const addPageHeader = () => {
-        const logoUrl = "https://upload.wikimedia.org/wikipedia/commons/8/83/OJK_Logo.png  ";
+        const logoUrl = "https://upload.wikimedia.org/wikipedia/commons/8/83/OJK_Logo.png";
         doc.addImage(logoUrl, 'PNG', 92, 15, 26, 12); 
         applyStyle(14, 'bold', [185, 28, 28]);
         doc.text("LAPORAN REKAPITULASI ANALISIS LOGISTIK", 105, 35, { align: "center" });
