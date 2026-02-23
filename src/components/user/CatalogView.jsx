@@ -96,27 +96,47 @@ const CatalogView = ({ inventory, filteredItems, activeCategory, setActiveCatego
     <div className="relative pl-6 font-sans animate-in fade-in slide-in-from-bottom-4 duration-500">
       
       {/* INTERACTIVE SLIDE BAR */}
-      <div ref={scrollTrackRef} onMouseDown={() => setIsDragging(true)} className="fixed right-2 top-4 bottom-4 w-3 bg-slate-100/50 backdrop-blur-sm rounded-full z-[150] border border-slate-200 shadow-inner cursor-pointer">
+      <div ref={scrollTrackRef} onMouseDown={() => setIsDragging(true)} className="fixed right-2 top-4 bottom-4 w-3 bg-slate-100/50 backdrop-blur-sm rounded-full z-[150] border border-slate-200 shadow-inner cursor-pointer hidden md:block">
         <div className="absolute w-full bg-gradient-to-b from-red-500 via-red-700 to-[#4a0404] rounded-full shadow-lg" style={{ height: '40px', top: `calc(${scrollProgress}% - ${scrollProgress * 0.4}px)` }}>
           <div className="w-1/2 h-0.5 bg-white/30 mx-auto mt-4 rounded-full"></div>
           <div className="w-1/2 h-0.5 bg-white/30 mx-auto mt-1 rounded-full"></div>
         </div>
       </div>
 
-      <button onClick={scrollToTop} className={`fixed bottom-8 right-12 z-[140] p-4 bg-red-600 text-white rounded-2xl shadow-2xl transition-all duration-300 transform border border-white hover:bg-red-700 active:scale-90 ${showBackToTop ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-20 opacity-0 scale-50'}`}>
-        <ChevronUp className="w-6 h-6" strokeWidth={3} />
-      </button>
+      {/* --- REVISI: FLOATING BUTTONS (SERAGAM UKURAN & GANTI ICON) --- */}
+      <div className="fixed bottom-8 right-8 md:right-12 z-[140] flex flex-col items-center gap-3">
+        {/* 1. Tombol Back to Top (Tema Merah OJK, Ukuran Tetap w-14 h-14) */}
+        <button 
+          onClick={scrollToTop} 
+          className={`w-14 h-14 bg-red-600 text-white rounded-full shadow-2xl transition-all duration-300 transform border-2 border-white/20 hover:bg-red-700 active:scale-90 flex items-center justify-center
+            ${showBackToTop ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-10 opacity-0 scale-50 pointer-events-none'}`}
+          title="Kembali ke Atas"
+        >
+          <ChevronUp className="w-7 h-7" strokeWidth={3} />
+        </button>
+
+        {/* 2. Tombol WhatsApp (Image PNG, Ukuran Tetap w-14 h-14 dalam lingkaran putih) */}
+        <a 
+          href="https://wa.me/6281938234937" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          // Menggunakan container putih agar PNG terlihat bersih, ukuran disamakan w-14 h-14
+          className="w-14 h-14 bg-white rounded-full shadow-xl transition-all duration-300 transform hover:scale-110 active:scale-90 flex items-center justify-center group border-2 border-slate-100 overflow-hidden p-0.5"
+          title="Hubungi Admin (WhatsApp)"
+        >
+          <img 
+            src="https://images.icon-icons.com/2972/PNG/512/whatsapp_logo_icon_186881.png" 
+            alt="WhatsApp" 
+            className="w-full h-full object-cover"
+          />
+        </a>
+      </div>
 
       {/* STICKY HEADER CATALOG */}
       <div className="sticky top-[80px] md:top-[73px] z-30 -mx-300 px-300 bg-[#ffffff]">
-        {/* 1. Pembungkus di atas (bg-[#f8fafc]) berfungsi sebagai 'masker' 
-            yang menutup area transparan di luar rounded corner.
-        */}
-        
         <div className="bg-white rounded-[13px] p-6 shadow-sm border border-slate-100 space-y-6 mt-4">
           <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-start gap-4">
-              {/* Header Shape Aksen Merah OJK */}
               <div className="w-1.5 h-12 bg-red-600 rounded-full mt-1 hidden md:block"></div>
               <div>
                 <h2 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tighter flex items-center gap-3">
@@ -130,7 +150,7 @@ const CatalogView = ({ inventory, filteredItems, activeCategory, setActiveCatego
             </div>
           </header>
 
-          {/* CATEGORY NAVIGATION DENGAN SCROLLBAR */}
+          {/* CATEGORY NAVIGATION */}
           <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-[13px] border border-slate-100 shadow-inner overflow-x-auto max-w-full custom-scrollbar pb-3">
             <div className="flex flex-nowrap items-stretch gap-1.5">
               {dynamicCategories.map(cat => (
@@ -156,7 +176,7 @@ const CatalogView = ({ inventory, filteredItems, activeCategory, setActiveCatego
         </div>
       </div>
 
-      {/* ITEM GRID CATALOG (TETAP SAMA) */}
+      {/* ITEM GRID CATALOG */}
       <div key={activeCategory} className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 pt-6 pr-10 animate-in fade-in slide-in-from-bottom-2 duration-500 relative z-10">
         {[...filteredItems]
           .sort((a, b) => {
@@ -172,7 +192,6 @@ const CatalogView = ({ inventory, filteredItems, activeCategory, setActiveCatego
             const buttonColorClass = getButtonColor(item.category);
 
             return (
-              /* BOX BARANG TETAP GRADIEN MERAH (SESUAI ASLINYA) */
               <div key={item.id} className="bg-gradient-to-b from-red-500 to-red-800 rounded-2xl border border-red-600/20 overflow-hidden shadow-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 group relative flex flex-col">
                 {cartItem && (
                   <div className="absolute top-4 right-4 z-20 bg-white text-red-600 text-[10px] font-bold px-3 py-1 rounded-full shadow-lg border border-red-50">
@@ -201,9 +220,7 @@ const CatalogView = ({ inventory, filteredItems, activeCategory, setActiveCatego
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
-                      {/* --- REVISI: MINIMALIST QUANTITY SELECTOR --- */}
                       <div className="flex items-center bg-white/10 backdrop-blur-md p-1 rounded-2xl border border-white/20 shadow-inner group/qty">
-                        {/* Tombol Kurangi */}
                         <button 
                           onClick={() => handleUpdateQuantity(item, currentQty - 1)}
                           className={`w-9 h-9 flex items-center justify-center text-white rounded-xl transition-all active:scale-90 hover:brightness-110 shadow-sm ${buttonColorClass}`}
@@ -211,21 +228,17 @@ const CatalogView = ({ inventory, filteredItems, activeCategory, setActiveCatego
                           <Minus className="w-4 h-4" strokeWidth={3} />
                         </button>
 
-                        {/* Input Angka (Support 3 Digit & Manual Type) */}
                         <div className="relative flex items-center justify-center">
                           <input 
                             type="number"
-                            // FIX: Menggunakan currentQty langsung, jika 0 atau '' biarkan kosong saat fokus
                             value={currentQty === 0 ? '' : currentQty}
                             onInput={(e) => {
                               const val = e.target.value;
-                              // Limit 3 digit dan cegah angka negatif
                               if (val.length <= 3) {
                                 const parsedVal = val === '' ? 0 : parseInt(val);
                                 handleUpdateQuantity(item, parsedVal);
                               }
                             }}
-                            // Logika Blur: Jika kosong saat ditinggalkan, pastikan kembali ke 0
                             onBlur={(e) => {
                               if (e.target.value === '' || parseInt(e.target.value) < 0) {
                                 handleUpdateQuantity(item, 0);
@@ -236,7 +249,6 @@ const CatalogView = ({ inventory, filteredItems, activeCategory, setActiveCatego
                           />
                         </div>
 
-                        {/* Tombol Tambah */}
                         <button 
                           onClick={() => handleUpdateQuantity(item, currentQty + 1)}
                           className={`w-9 h-9 flex items-center justify-center text-white rounded-xl transition-all active:scale-90 hover:brightness-110 shadow-sm ${buttonColorClass}`}

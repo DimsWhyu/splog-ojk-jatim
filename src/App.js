@@ -105,12 +105,17 @@ const AppContent = () => {
         const savedUser = localStorage.getItem('splog_session');
         if (savedUser) {
           const userData = JSON.parse(savedUser);
-          const user = (data.users || []).find(u => String(u.username) === userData.username);
+          const user = (data.users || []).find(u => {
+            const sheetUsername = u.username || u.Username || u.USERNAME || '';
+            return String(sheetUsername).toLowerCase() === String(userData.username).toLowerCase();
+          });
+          
           if (user) {
             setIsLoggedIn(true); 
             setCurrentUser(user); 
-            setRole(user.role);
-            setView(user.role === 'admin' ? 'dashboard' : 'catalog');
+            const userRole = user.role || user.Role || user.ROLE || 'user';
+            setRole(userRole.toLowerCase());
+            setView(userRole.toLowerCase() === 'admin' ? 'dashboard' : 'catalog');
           }
         }
       } catch (error) { 
@@ -123,17 +128,31 @@ const AppContent = () => {
   useEffect(() => { fetchAllData(); }, []);
 
   const handleLogin = (username, password, rememberMe) => {
-    if (!validUsers || validUsers.length === 0) return false;
-    const user = validUsers.find(u => 
-      String(u.username).trim().toLowerCase() === String(username).trim().toLowerCase() && 
-      String(u.password).trim() === String(password).trim()
-    );
+    if (!validUsers || validUsers.length === 0) {
+      console.warn("Sistem belum menerima data user dari Google Sheets. Coba refresh halaman.");
+      return false;
+    }
+    
+    const user = validUsers.find(u => {
+      const sheetUsername = u.username || u.Username || u.USERNAME || '';
+      const sheetPassword = u.password || u.Password || u.PASSWORD || '';
+      
+      return String(sheetUsername).trim().toLowerCase() === String(username).trim().toLowerCase() && 
+             String(sheetPassword).trim() === String(password).trim();
+    });
+
     if (user) {
-      if (rememberMe) localStorage.setItem('splog_session', JSON.stringify({ username: user.username }));
-      setIsLoggedIn(true); setCurrentUser(user); setRole(user.role);
-      setView(user.role === 'admin' ? 'dashboard' : 'catalog');
+      const matchedUsername = user.username || user.Username || user.USERNAME;
+      const matchedRole = user.role || user.Role || user.ROLE || 'user';
+
+      if (rememberMe) localStorage.setItem('splog_session', JSON.stringify({ username: matchedUsername }));
+      setIsLoggedIn(true); 
+      setCurrentUser(user); 
+      setRole(matchedRole.toLowerCase());
+      setView(matchedRole.toLowerCase() === 'admin' ? 'dashboard' : 'catalog');
       return true;
     }
+    
     return false;
   };
 
@@ -299,165 +318,172 @@ const AppContent = () => {
   if (!isLoggedIn) return <LoginView onLogin={handleLogin} />;
 
   return (
-    <div className="min-h-screen flex flex-col bg-batik-ojk font-sans text-slate-800 animate-content-fade">
-      <Navbar 
-        role={role} 
-        currentUser={currentUser} 
-        onLogout={handleLogout} 
-        searchQuery={searchQuery} 
-        setSearchQuery={setSearchQuery} 
-        setView={setView} 
-        inventory={inventory}
-        isSidebarOpen={isSidebarOpen}
-        setIsSidebarOpen={setIsSidebarOpen}
-      />
+    // REVISI: Pastikan div utama memiliki class 'relative'
+    <div className="min-h-screen flex flex-col bg-batik-ojk font-sans text-slate-800 animate-content-fade relative">
+      
+      {/* REVISI: Panggil class CSS pattern yang baru dibuat di layer z-0 */}
+      <div className="bg-pattern-bottom" />
 
-      <div className="flex-1 max-w-[1440px] mx-auto px-4 lg:px-10 py-8 flex gap-10 w-full items-start relative">
-        <Sidebar 
+      {/* REVISI: Bungkus seluruh konten aplikasi dengan layer z-10 */}
+      <div className="relative z-10 flex flex-col min-h-screen w-full">
+        <Navbar 
           role={role} 
-          view={view} 
+          currentUser={currentUser} 
+          onLogout={handleLogout} 
+          searchQuery={searchQuery} 
+          setSearchQuery={setSearchQuery} 
           setView={setView} 
-          isOpen={isSidebarOpen} 
-          setIsOpen={setIsSidebarOpen}
-          onLogout={handleLogout}
-          currentUser={currentUser}
+          inventory={inventory}
+          isSidebarOpen={isSidebarOpen}
+          setIsSidebarOpen={setIsSidebarOpen}
         />
-        <main className="flex-1 min-w-0">
-          {role === 'user' && view === 'catalog' && <CatalogView inventory={inventory} filteredItems={filteredItems} activeCategory={activeCategory} setActiveCategory={setActiveCategory} handleUpdateQuantity={handleUpdateQuantity} />}
-          {role === 'user' && view === 'cart' && <CartView setView={setView} handleCheckout={handleCheckout} inventory={inventory} handleUpdateQuantity={handleUpdateQuantity}/>}
-          {role === 'user' && view === 'history' && (
-            <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
-              <h3 className="text-2xl font-bold text-slate-800 tracking-tight">Riwayat Pengajuan</h3>
-              <div className="bg-white rounded-[17px] border border-slate-100 shadow-2xl shadow-slate-200/40 overflow-hidden relative">
-                <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
-                  <table className="w-full text-left border-collapse">
-                    <thead className="sticky top-0 z-20 bg-slate-800 text-white text-[13px] font-black shadow-md">
-                      <tr>
-                        <th className="px-6 py-5 border-b border-slate-700">No. Referensi</th>
-                        <th className="px-6 py-5 border-b border-slate-700">Tanggal Pengajuan</th>
-                        <th className="px-6 py-5 border-b border-slate-700">Tujuan Kebutuhan</th>
-                        <th className="px-6 py-5 border-b border-slate-700 text-center">Status</th>
-                        <th className="px-6 py-5 border-b border-slate-700 text-center">Aksi</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50">
-                      {requests
-                        .filter(req => req.user === currentUser?.name)
-                        .reverse()
-                        .map(req => (
-                          <tr key={req.id} className="hover:bg-red-50/20 transition-all duration-300 group">
-                            <td className="px-6 py-6 font-black text-slate-800 group-hover:text-red-600 transition-colors">{req.id}</td>
-                            <td className="px-6 py-6 text-sm text-slate-500 font-medium">{req.date}</td>
-                            <td className="px-6 py-6 text-sm text-slate-600 font-medium italic truncate max-w-[250px]">"{req.note}"</td>
-                            <td className="px-6 py-6 text-center">
-                              <span className={`px-3 py-1 rounded-full text-[10px] font-bold border ${req.status === 'Disetujui' ? 'bg-green-50 text-green-600 border-green-100' : req.status === 'Ditolak' || req.status === 'Dibatalkan' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>{req.status}</span>
-                            </td>
-                            <td className="px-6 py-6 text-center flex justify-center gap-2">
-                              <button onClick={() => setSelectedRequest(req)} className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all"><Eye className="w-4 h-4" /></button>
-                              <button onClick={() => downloadXLSX(req)} className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all"><FileText className="w-4 h-4" /></button>
-                              {req.status === 'Menunggu' && <button onClick={() => handleCancel(req)} className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-all"><X className="w-4 h-4" /></button>}
-                            </td>
-                          </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
-          {role === 'admin' && view === 'dashboard' && <DashboardView requests={requests} inventory={inventory} handleApproval={handleApproval} onViewDetails={setSelectedRequest}/>}
-          {role === 'admin' && view === 'admin-inventory' && <InventoryView inventory={inventory} addAmounts={addAmounts} handleAddAmountChange={handleAddAmountChange} validateStockAddition={validateStockAddition} handleUpdateItem={handleUpdateItem} handleDeleteItem={handleDeleteItem} />}
-          {role === 'admin' && view === 'add-item' && <AddItemView inventory={inventory} onAddItem={handleAddItem} onCancel={() => setView('admin-inventory')} />}
-          {role === 'admin' && view === 'manage-users' && <CreateUserView validUsers={validUsers} WEB_APP_URL={WEB_APP_URL} fetchAllData={fetchAllData} />}
-          
-          {/* --- PENYESUAIAN 2: RENDER DASHBOARD ANALYSIS --- */}
-          {role === 'admin' && view === 'analytics' && (
-            <AnalyticsDashboard 
-              requests={requests} 
-              inventory={inventory} 
-            />
-          )}
-        </main>
-      </div>
 
-      {selectedRequest && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md animate-fade-in" onClick={() => setSelectedRequest(null)}></div>
-          <div className="relative bg-white rounded-[17px] shadow-2xl w-full max-w-2xl overflow-hidden animate-modal-pop border border-white/20">
-            <div className="bg-gradient-to-r from-red-600 to-[#4a0404] p-8 text-white">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h3 className="text-xl font-black tracking-tighter uppercase">🗃️ Detail Pengajuan Item</h3>
-                  <p className="text-red-100/70 text-xs font-bold tracking-widest mt-1">{selectedRequest.id} • {selectedRequest.date}</p>
+        <div className="flex-1 max-w-[1440px] mx-auto px-4 lg:px-10 py-8 flex gap-10 w-full items-start relative">
+          <Sidebar 
+            role={role} 
+            view={view} 
+            setView={setView} 
+            isOpen={isSidebarOpen} 
+            setIsOpen={setIsSidebarOpen}
+            onLogout={handleLogout}
+            currentUser={currentUser}
+          />
+          <main className="flex-1 min-w-0">
+            {role === 'user' && view === 'catalog' && <CatalogView inventory={inventory} filteredItems={filteredItems} activeCategory={activeCategory} setActiveCategory={setActiveCategory} handleUpdateQuantity={handleUpdateQuantity} />}
+            {role === 'user' && view === 'cart' && <CartView setView={setView} handleCheckout={handleCheckout} inventory={inventory} handleUpdateQuantity={handleUpdateQuantity}/>}
+            {role === 'user' && view === 'history' && (
+              <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+                <h3 className="text-2xl font-bold text-slate-800 tracking-tight">Riwayat Pengajuan</h3>
+                <div className="bg-white rounded-[17px] border border-slate-100 shadow-2xl shadow-slate-200/40 overflow-hidden relative">
+                  <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
+                    <table className="w-full text-left border-collapse">
+                      <thead className="sticky top-0 z-20 bg-slate-800 text-white text-[13px] font-black shadow-md">
+                        <tr>
+                          <th className="px-6 py-5 border-b border-slate-700">No. Referensi</th>
+                          <th className="px-6 py-5 border-b border-slate-700">Tanggal Pengajuan</th>
+                          <th className="px-6 py-5 border-b border-slate-700">Tujuan Kebutuhan</th>
+                          <th className="px-6 py-5 border-b border-slate-700 text-center">Status</th>
+                          <th className="px-6 py-5 border-b border-slate-700 text-center">Aksi</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-50">
+                        {requests
+                          .filter(req => req.user === currentUser?.name)
+                          .reverse()
+                          .map(req => (
+                            <tr key={req.id} className="hover:bg-red-50/20 transition-all duration-300 group">
+                              <td className="px-6 py-6 font-black text-slate-800 group-hover:text-red-600 transition-colors">{req.id}</td>
+                              <td className="px-6 py-6 text-sm text-slate-500 font-medium">{req.date}</td>
+                              <td className="px-6 py-6 text-sm text-slate-600 font-medium italic truncate max-w-[250px]">"{req.note}"</td>
+                              <td className="px-6 py-6 text-center">
+                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold border ${req.status === 'Disetujui' ? 'bg-green-50 text-green-600 border-green-100' : req.status === 'Ditolak' || req.status === 'Dibatalkan' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>{req.status}</span>
+                              </td>
+                              <td className="px-6 py-6 text-center flex justify-center gap-2">
+                                <button onClick={() => setSelectedRequest(req)} className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all"><Eye className="w-4 h-4" /></button>
+                                <button onClick={() => downloadXLSX(req)} className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all"><FileText className="w-4 h-4" /></button>
+                                {req.status === 'Menunggu' && <button onClick={() => handleCancel(req)} className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-all"><X className="w-4 h-4" /></button>}
+                              </td>
+                            </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-                <button onClick={() => setSelectedRequest(null)} className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"><X className="w-6 h-6" /></button>
               </div>
-            </div>
-            <div className="p-8 max-h-[50vh] overflow-y-auto custom-scrollbar space-y-4">
-              {selectedRequest.itemsDetail.map((item, idx) => (
-                <div key={idx} className="flex items-center justify-between p-5 bg-slate-50 rounded-[24px] border border-slate-100 group hover:border-red-100 transition-all">
-                  <div className="flex items-center gap-5">
-                    <div className="w-16 h-16 bg-white border border-slate-200 rounded-2xl overflow-hidden p-1 shadow-sm">
-                      <img src={item.image} alt="" className="w-full h-full object-cover rounded-xl" />
-                    </div>
-                    <div>
-                      <span className="text-sm font-black text-slate-800 block tracking-tight">{item.name}</span>
-                      <div className="flex items-center gap-1.5 mt-1 text-slate-400">
-                        <Package className="w-3 h-3 text-red-500" />
-                        <span className="text-[10px] font-black tracking-widest text-slate-500">{item.category}</span>
+            )}
+            {role === 'admin' && view === 'dashboard' && <DashboardView requests={requests} inventory={inventory} handleApproval={handleApproval} onViewDetails={setSelectedRequest}/>}
+            {role === 'admin' && view === 'admin-inventory' && <InventoryView inventory={inventory} addAmounts={addAmounts} handleAddAmountChange={handleAddAmountChange} validateStockAddition={validateStockAddition} handleUpdateItem={handleUpdateItem} handleDeleteItem={handleDeleteItem} />}
+            {role === 'admin' && view === 'add-item' && <AddItemView inventory={inventory} onAddItem={handleAddItem} onCancel={() => setView('admin-inventory')} />}
+            {role === 'admin' && view === 'manage-users' && <CreateUserView validUsers={validUsers} WEB_APP_URL={WEB_APP_URL} fetchAllData={fetchAllData} />}
+            
+            {role === 'admin' && view === 'analytics' && (
+              <AnalyticsDashboard requests={requests} inventory={inventory} />
+            )}
+          </main>
+        </div>
+
+        {/* MODAL DETAIL */}
+        {selectedRequest && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md animate-fade-in" onClick={() => setSelectedRequest(null)}></div>
+            <div className="relative bg-white rounded-[17px] shadow-2xl w-full max-w-2xl overflow-hidden animate-modal-pop border border-white/20">
+              <div className="bg-gradient-to-r from-red-600 to-[#4a0404] p-8 text-white">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="text-xl font-black tracking-tighter uppercase">🗃️ Detail Pengajuan Item</h3>
+                    <p className="text-red-100/70 text-xs font-bold tracking-widest mt-1">{selectedRequest.id} • {selectedRequest.date}</p>
+                  </div>
+                  <button onClick={() => setSelectedRequest(null)} className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"><X className="w-6 h-6" /></button>
+                </div>
+              </div>
+              <div className="p-8 max-h-[50vh] overflow-y-auto custom-scrollbar space-y-4">
+                {selectedRequest.itemsDetail.map((item, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-5 bg-slate-50 rounded-[24px] border border-slate-100 group hover:border-red-100 transition-all">
+                    <div className="flex items-center gap-5">
+                      <div className="w-16 h-16 bg-white border border-slate-200 rounded-2xl overflow-hidden p-1 shadow-sm">
+                        <img src={item.image} alt="" className="w-full h-full object-cover rounded-xl" />
+                      </div>
+                      <div>
+                        <span className="text-sm font-black text-slate-800 block tracking-tight">{item.name}</span>
+                        <div className="flex items-center gap-1.5 mt-1 text-slate-400">
+                          <Package className="w-3 h-3 text-red-500" />
+                          <span className="text-[10px] font-black tracking-widest text-slate-500">{item.category}</span>
+                        </div>
                       </div>
                     </div>
+                    <div className="text-right">
+                      <span className="text-xl font-black text-red-600 leading-none">{item.quantity}</span>
+                      <span className="text-[10px] font-bold text-slate-400 block tracking-widest mt-1">{item.unit}</span>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <span className="text-xl font-black text-red-600 leading-none">{item.quantity}</span>
-                    <span className="text-[10px] font-bold text-slate-400 block tracking-widest mt-1">{item.unit}</span>
+                ))}
+              </div>
+              <div className="p-8 bg-slate-50 border-t border-slate-100">
+                <div className="flex items-start gap-3">
+                  <div className="mt-1 flex-shrink-0">
+                    <Hash className="w-4 h-4 text-red-600" />
                   </div>
-                </div>
-              ))}
-            </div>
-            <div className="p-8 bg-slate-50 border-t border-slate-100">
-              <div className="flex items-start gap-3">
-                <div className="mt-1 flex-shrink-0">
-                  <Hash className="w-4 h-4 text-red-600" />
-                </div>
-                <div className="flex-1 min-w-0"> 
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Tujuan / Justifikasi Pengajuan:</p>
-                  <p className="text-sm font-bold text-slate-600 italic leading-relaxed break-words whitespace-pre-wrap">"{selectedRequest.note || "Tanpa Catatan"}"</p>
+                  <div className="flex-1 min-w-0"> 
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Tujuan / Justifikasi Pengajuan:</p>
+                    <p className="text-sm font-bold text-slate-600 italic leading-relaxed break-words whitespace-pre-wrap">"{selectedRequest.note || "Tanpa Catatan"}"</p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {warning.show && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 text-center">
-          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setWarning({ ...warning, show: false })}></div>
-          <div className="relative bg-white rounded-[17px] shadow-2xl p-10 max-w-sm w-full animate-modal-pop">
-            <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6"><AlertCircle className="w-10 h-10 text-red-600" /></div>
-            <h3 className="text-xl font-black text-slate-800 mb-2">Stok Terbatas</h3>
-            <p className="text-sm font-medium text-slate-500 mb-8 leading-relaxed">{warning.message}</p>
-            <button onClick={() => setWarning({ ...warning, show: false })} className="w-full py-4 bg-red-600 text-white font-black rounded-2xl active:scale-95 transition-all uppercase text-[11px] tracking-widest">Oke, Mengerti</button>
-          </div>
-        </div>
-      )}
-
-      {cancelModal.show && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md animate-fade-in" onClick={() => setCancelModal({ show: false, request: null })}></div>
-          <div className="relative bg-white rounded-[17px] shadow-2xl p-10 max-w-md w-full animate-modal-pop text-center">
-            <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6"><AlertCircle className="w-12 h-12 text-red-600 animate-pulse" /></div>
-            <h3 className="text-2xl font-black text-slate-800 mb-3 tracking-tight">Konfirmasi Batal</h3>
-            <p className="text-sm font-medium text-slate-500 leading-relaxed px-2">Apakah Anda yakin ingin membatalkan pengajuan <span className="text-red-600 font-bold">{cancelModal.request?.id}</span>? <br /><span className="italic font-bold text-slate-400 text-xs mt-2 block">*Stok barang akan otomatis dikembalikan ke gudang.</span></p>
-            <div className="grid grid-cols-2 gap-4 mt-10">
-              <button onClick={() => setCancelModal({ show: false, request: null })} className="py-4 bg-slate-100 text-slate-600 font-black rounded-2xl hover:bg-slate-200 transition-all text-[12px] uppercase tracking-tight">Kembali</button>
-              <button onClick={confirmCancelRequest} className="py-4 bg-gradient-to-r from-red-600 to-[#4a0404] text-white font-black rounded-2xl shadow-xl shadow-red-200 transition-all text-[12px] uppercase tracking-tight">Ya, Batalkan</button>
+        {/* MODAL WARNING */}
+        {warning.show && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 text-center">
+            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setWarning({ ...warning, show: false })}></div>
+            <div className="relative bg-white rounded-[17px] shadow-2xl p-10 max-w-sm w-full animate-modal-pop">
+              <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6"><AlertCircle className="w-10 h-10 text-red-600" /></div>
+              <h3 className="text-xl font-black text-slate-800 mb-2">Stok Terbatas</h3>
+              <p className="text-sm font-medium text-slate-500 mb-8 leading-relaxed">{warning.message}</p>
+              <button onClick={() => setWarning({ ...warning, show: false })} className="w-full py-4 bg-red-600 text-white font-black rounded-2xl active:scale-95 transition-all uppercase text-[11px] tracking-widest">Oke, Mengerti</button>
             </div>
           </div>
-        </div>
-      )}
-      
-      <Footer />
+        )}
+
+        {/* MODAL KONFIRMASI BATAL */}
+        {cancelModal.show && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md animate-fade-in" onClick={() => setCancelModal({ show: false, request: null })}></div>
+            <div className="relative bg-white rounded-[17px] shadow-2xl p-10 max-w-md w-full animate-modal-pop text-center">
+              <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6"><AlertCircle className="w-12 h-12 text-red-600 animate-pulse" /></div>
+              <h3 className="text-2xl font-black text-slate-800 mb-3 tracking-tight">Konfirmasi Batal</h3>
+              <p className="text-sm font-medium text-slate-500 leading-relaxed px-2">Apakah Anda yakin ingin membatalkan pengajuan <span className="text-red-600 font-bold">{cancelModal.request?.id}</span>? <br /><span className="italic font-bold text-slate-400 text-xs mt-2 block">*Stok barang akan otomatis dikembalikan ke gudang.</span></p>
+              <div className="grid grid-cols-2 gap-4 mt-10">
+                <button onClick={() => setCancelModal({ show: false, request: null })} className="py-4 bg-slate-100 text-slate-600 font-black rounded-2xl hover:bg-slate-200 transition-all text-[12px] uppercase tracking-tight">Kembali</button>
+                <button onClick={confirmCancelRequest} className="py-4 bg-gradient-to-r from-red-600 to-[#4a0404] text-white font-black rounded-2xl shadow-xl shadow-red-200 transition-all text-[12px] uppercase tracking-tight">Ya, Batalkan</button>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        <Footer />
+      </div>
     </div>
   );
 };

@@ -45,8 +45,15 @@ const LoginView = ({ onLogin }) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFDFD] flex items-center justify-center p-4 font-sans text-slate-800">
-      <div className="max-w-md w-full animate-in fade-in zoom-in-95 duration-500">
+    // 1. REVISI: Tambahkan 'relative overflow-hidden' pada kontainer utama agar pattern tidak bocor
+    <div className="min-h-screen bg-[#FDFDFD] flex items-center justify-center p-4 font-sans text-slate-800 relative overflow-hidden">
+      
+      {/* 2. REVISI: Panggil class CSS pattern yang sudah dibuat di App.css */}
+      <div className="bg-pattern-top" />
+      <div className="bg-pattern-bottom" />
+
+      {/* 3. REVISI: Pastikan konten login berada di layer atas (z-10) agar tetap bisa diklik */}
+      <div className="max-w-md w-full animate-in fade-in zoom-in-95 duration-500 relative z-10">
         
         {/* Header Section */}
         <div className="text-center mb-10 space-y-4">
@@ -155,7 +162,7 @@ const LoginView = ({ onLogin }) => {
             <button 
               type="submit"
               disabled={isLoading}
-              className="w-full py-4 bg-red-600 hover:bg-red-700 disabled:bg-slate-300 text-white font-bold rounded-xl shadow-lg shadow-red-100 transition-all active:scale-95 flex items-center justify-center gap-2 tracking-wide disabled:cursor-not-allowed"
+              className="w-full py-4 bg-red-600 hover:bg-red-700 disabled:bg-slate-300 text-white font-bold rounded-xl shadow-lg shadow-red-100 transition-all active:scale-95 flex items-center justify-center gap-2 tracking-wide disabled:cursor-not-allowed group"
             >
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>

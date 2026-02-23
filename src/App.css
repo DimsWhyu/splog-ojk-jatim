@@ -1,4 +1,3 @@
-/* --- GLOBAL SCALING (Zoom Out Adjustment) --- */
 html {
   font-size: 13px; /* Standar Desktop */
   scroll-behavior: smooth;
@@ -164,4 +163,43 @@ input, select, textarea {
 }
 .no-spinner {
   -moz-appearance: textfield; /* Firefox */
+}
+
+/* --- CLASS BARU KHUSUS BACKGROUND PATTERN --- */
+.bg-pattern-bottom {
+  position: fixed; /* Fixed agar selalu menempel di layar bawah saat di-scroll */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('./image/Bg_Splog.png');
+  background-position: bottom center; /* Posisikan gambar di bawah */
+  background-size: 1200px; /* Ukuran gambar, ubah jika terlalu besar/kecil */
+  background-repeat: repeat-x; /* Ulangi ke samping saja */
+  opacity: 0.8; /* Sesuaikan ketebalan warna gambar (15% terlihat) */
+  pointer-events: none; /* SANGAT PENTING: Agar tidak menghalangi klik tombol */
+  z-index: 0; /* Taruh di layer paling belakang */
+  
+  /* Efek Masking: Transparan dari 0% - 80%, lalu memudar (fade in) sampai 100% di bawah */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, transparent 80%, black 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, transparent 80%, black 100%);
+}
+
+.bg-pattern-top {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('./image/Bg_Splog.png');
+  background-position: top center; /* Posisikan gambar di atas */
+  background-size: 600px; 
+  background-repeat: repeat-x; 
+  opacity: 0.15; 
+  pointer-events: none; 
+  z-index: 0; 
+  
+  /* Efek Masking Dibalik: Terlihat jelas di atas (0%), lalu memudar hingga 20% dan transparan total di bawahnya */
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 30%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 0%, transparent 30%, transparent 100%);
 }
