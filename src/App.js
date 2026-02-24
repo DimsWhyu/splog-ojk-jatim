@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AlertCircle, FileText, Eye, X, Hash, Package } from 'lucide-react';
+import { AlertCircle, FileText, Eye, X, Hash, Package, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import Navbar from './components/common/Navbar';
 import Sidebar from './components/common/Sidebar';
@@ -15,7 +15,7 @@ import AnalyticsDashboard from './components/admin/AnalyticsDashboard';
 import { CartProvider, useCart } from './context/CartContext';
 import './App.css';
 
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyaE1LNFWfwDaWbuUwTvFSUZ-O3ARgprfrK7UFJpR5cunMIvj1xDvNb0JavymGhTh7W/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzWzd5YTXPTXo9oMJoJ03oi6ufCckWnCpdHK6cXPU3IsOysHjhFohQVjmlTHwjm8hyJ/exec";
 
 const INITIAL_REQUESTS = [];
 
@@ -44,6 +44,7 @@ const AppContent = () => {
   const [warning, setWarning] = useState({ show: false, message: "" });
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [cancelModal, setCancelModal] = useState({ show: false, request: null });
+  const [expandedRejectReason, setExpandedRejectReason] = useState(null);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -96,6 +97,7 @@ const AppContent = () => {
               date: h.tanggalpengajuan || h.tanggal || h["tanggal"], 
               note: h.tujuankebutuhan || h.tujuan || h["tujuan"], 
               status: h.statusverifikasi || h.status || h["status"], 
+              rejectionReason: h.alasanpenolakan || h["alasanpenolakan"] || '',
               itemsDetail: itemsDetailArray 
             };
           });
@@ -245,7 +247,8 @@ const AppContent = () => {
       itemsDetail: [...cart],
       items: cart.reduce((acc, curr) => acc + curr.quantity, 0),
       status: 'Menunggu',
-      note: safeNote
+      note: safeNote,
+      rejectionReason: ''
     };
     setRequests([newRequest, ...requests]); 
     clearCart(); setView('history'); 
@@ -260,8 +263,15 @@ const AppContent = () => {
     });
   };
 
-  const handleApproval = async (id, status) => {
-    setRequests(prevRequests => prevRequests.map(r => r.id === id ? { ...r, status } : r));
+  // REVISI: Handle Approval dengan rejectionReason
+  const handleApproval = async (id, status, rejectionReason = '') => {
+    setRequests(prevRequests => prevRequests.map(r => 
+      r.id === id ? { 
+        ...r, 
+        status,
+        rejectionReason: status === 'Ditolak' ? rejectionReason : ''
+      } : r
+    ));
     const targetReq = requests.find(r => r.id === id);
     if (!targetReq) return;
     if (status === 'Ditolak' || status === 'Dibatalkan') {
@@ -276,7 +286,12 @@ const AppContent = () => {
       const actionMap = { 'Disetujui': 'approveRequest', 'Ditolak': 'rejectRequest', 'Dibatalkan': 'cancelRequest' };
       fetch(WEB_APP_URL, {
         method: "POST", mode: "no-cors",
-        body: JSON.stringify({ action: actionMap[status] || 'approveRequest', ...targetReq, status: status })
+        body: JSON.stringify({ 
+          action: actionMap[status] || 'approveRequest', 
+          ...targetReq, 
+          status: status,
+          alasanpenolakan: rejectionReason
+        })
       });
     } catch (error) { console.error(`Gagal mencatat status ${status}:`, error); }
   };
@@ -307,10 +322,15 @@ const AppContent = () => {
     return matchesSearch && matchesCategory;
   });
 
+  // Toggle expand/collapse rejection reason
+  const toggleRejectReason = (reqId) => {
+    setExpandedRejectReason(expandedRejectReason === reqId ? null : reqId);
+  };
+
   if (isLoading) {
     return (
       <div className="fixed inset-0 z-[999] bg-batik-ojk flex items-center justify-center overflow-hidden">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/OJK_Logo.png" alt="OJK" className="h-28 w-auto animate-pulse" />
+        <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/OJK_Logo.png  " alt="OJK" className="h-28 w-auto animate-pulse" />
       </div>
     );
   }
@@ -318,13 +338,10 @@ const AppContent = () => {
   if (!isLoggedIn) return <LoginView onLogin={handleLogin} />;
 
   return (
-    // REVISI: Pastikan div utama memiliki class 'relative'
     <div className="min-h-screen flex flex-col bg-batik-ojk font-sans text-slate-800 animate-content-fade relative">
       
-      {/* REVISI: Panggil class CSS pattern yang baru dibuat di layer z-0 */}
       <div className="bg-pattern-bottom" />
 
-      {/* REVISI: Bungkus seluruh konten aplikasi dengan layer z-10 */}
       <div className="relative z-10 flex flex-col min-h-screen w-full">
         <Navbar 
           role={role} 
@@ -351,6 +368,8 @@ const AppContent = () => {
           <main className="flex-1 min-w-0">
             {role === 'user' && view === 'catalog' && <CatalogView inventory={inventory} filteredItems={filteredItems} activeCategory={activeCategory} setActiveCategory={setActiveCategory} handleUpdateQuantity={handleUpdateQuantity} />}
             {role === 'user' && view === 'cart' && <CartView setView={setView} handleCheckout={handleCheckout} inventory={inventory} handleUpdateQuantity={handleUpdateQuantity}/>}
+            
+            {/* REVISI: History View dengan Rejection Reason */}
             {role === 'user' && view === 'history' && (
               <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
                 <h3 className="text-2xl font-bold text-slate-800 tracking-tight">Riwayat Pengajuan</h3>
@@ -371,19 +390,51 @@ const AppContent = () => {
                           .filter(req => req.user === currentUser?.name)
                           .reverse()
                           .map(req => (
-                            <tr key={req.id} className="hover:bg-red-50/20 transition-all duration-300 group">
-                              <td className="px-6 py-6 font-black text-slate-800 group-hover:text-red-600 transition-colors">{req.id}</td>
-                              <td className="px-6 py-6 text-sm text-slate-500 font-medium">{req.date}</td>
-                              <td className="px-6 py-6 text-sm text-slate-600 font-medium italic truncate max-w-[250px]">"{req.note}"</td>
-                              <td className="px-6 py-6 text-center">
-                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold border ${req.status === 'Disetujui' ? 'bg-green-50 text-green-600 border-green-100' : req.status === 'Ditolak' || req.status === 'Dibatalkan' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>{req.status}</span>
-                              </td>
-                              <td className="px-6 py-6 text-center flex justify-center gap-2">
-                                <button onClick={() => setSelectedRequest(req)} className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all"><Eye className="w-4 h-4" /></button>
-                                <button onClick={() => downloadXLSX(req)} className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all"><FileText className="w-4 h-4" /></button>
-                                {req.status === 'Menunggu' && <button onClick={() => handleCancel(req)} className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-all"><X className="w-4 h-4" /></button>}
-                              </td>
-                            </tr>
+                            <React.Fragment key={req.id}>
+                              <tr className="hover:bg-red-50/20 transition-all duration-300 group">
+                                <td className="px-6 py-6 font-black text-slate-800 group-hover:text-red-600 transition-colors">{req.id}</td>
+                                <td className="px-6 py-6 text-sm text-slate-500 font-medium">{req.date}</td>
+                                <td className="px-6 py-6 text-sm text-slate-600 font-medium italic truncate max-w-[250px]">"{req.note}"</td>
+                                <td className="px-6 py-6 text-center">
+                                  <span className={`px-3 py-1 rounded-full text-[10px] font-bold border ${req.status === 'Disetujui' ? 'bg-green-50 text-green-600 border-green-100' : req.status === 'Ditolak' || req.status === 'Dibatalkan' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>{req.status}</span>
+                                </td>
+                                <td className="px-6 py-6 text-center flex justify-center gap-2">
+                                  <button onClick={() => setSelectedRequest(req)} className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all"><Eye className="w-4 h-4" /></button>
+                                  <button onClick={() => downloadXLSX(req)} className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all"><FileText className="w-4 h-4" /></button>
+                                  {req.status === 'Menunggu' && <button onClick={() => handleCancel(req)} className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-all"><X className="w-4 h-4" /></button>}
+                                </td>
+                              </tr>
+                              
+                              {/* REJECTION REASON ROW - BARU DITAMBAHKAN */}
+                              {req.status === 'Ditolak' && req.rejectionReason && (
+                                <tr className="bg-red-50/30">
+                                  <td colSpan="5" className="px-6 py-0">
+                                    <div className="py-4">
+                                      <button
+                                        onClick={() => toggleRejectReason(req.id)}
+                                        className="flex items-center gap-2 text-red-600 font-bold text-[11px] tracking-tight hover:text-red-700 transition-colors"
+                                      >
+                                        <AlertTriangle className="w-4 h-4" />
+                                        Alasan Penolakan
+                                        {expandedRejectReason === req.id ? (
+                                          <ChevronUp className="w-4 h-4" />
+                                        ) : (
+                                          <ChevronDown className="w-4 h-4" />
+                                        )}
+                                      </button>
+                                      
+                                      {expandedRejectReason === req.id && (
+                                        <div className="mt-3 p-4 bg-white border border-red-200 rounded-[13px] animate-in fade-in slide-in-from-top-2 duration-200">
+                                          <p className="text-slate-700 text-[12px] font-medium leading-relaxed">
+                                            {req.rejectionReason}
+                                          </p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </td>
+                                </tr>
+                              )}
+                            </React.Fragment>
                         ))}
                       </tbody>
                     </table>
@@ -391,6 +442,7 @@ const AppContent = () => {
                 </div>
               </div>
             )}
+            
             {role === 'admin' && view === 'dashboard' && <DashboardView requests={requests} inventory={inventory} handleApproval={handleApproval} onViewDetails={setSelectedRequest}/>}
             {role === 'admin' && view === 'admin-inventory' && <InventoryView inventory={inventory} addAmounts={addAmounts} handleAddAmountChange={handleAddAmountChange} validateStockAddition={validateStockAddition} handleUpdateItem={handleUpdateItem} handleDeleteItem={handleDeleteItem} />}
             {role === 'admin' && view === 'add-item' && <AddItemView inventory={inventory} onAddItem={handleAddItem} onCancel={() => setView('admin-inventory')} />}
@@ -448,6 +500,21 @@ const AppContent = () => {
                     <p className="text-sm font-bold text-slate-600 italic leading-relaxed break-words whitespace-pre-wrap">"{selectedRequest.note || "Tanpa Catatan"}"</p>
                   </div>
                 </div>
+                
+                {/* REJECTION REASON IN MODAL - BARU DITAMBAHKAN */}
+                {selectedRequest.status === 'Ditolak' && selectedRequest.rejectionReason && (
+                  <div className="flex items-start gap-3 mt-4 pt-4 border-t border-red-200">
+                    <div className="mt-1 flex-shrink-0">
+                      <AlertTriangle className="w-4 h-4 text-red-600" />
+                    </div>
+                    <div className="flex-1 min-w-0"> 
+                      <p className="text-[10px] font-black text-red-400 uppercase tracking-widest mb-1">Alasan Penolakan:</p>
+                      <p className="text-sm font-bold text-red-700 leading-relaxed break-words whitespace-pre-wrap bg-red-50 p-3 rounded-[13px] border border-red-100">
+                        {selectedRequest.rejectionReason}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

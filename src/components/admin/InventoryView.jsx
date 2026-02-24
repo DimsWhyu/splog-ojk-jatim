@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react'; // REVISI: Tambahkan useEffect
-import { AlertTriangle, CheckCircle2, Hash, Search, ArrowUpDown, ChevronDown, Edit2, Trash2, X, Save, Archive } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { AlertTriangle, CheckCircle2, Hash, Search, ArrowUpDown, ChevronDown, Edit2, Trash2, X, Save, Archive, Filter } from 'lucide-react';
 
 const InventoryView = ({ inventory, addAmounts, handleAddAmountChange, validateStockAddition, handleUpdateItem, handleDeleteItem }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('Semua');
   const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
   const [showCategoryMenu, setShowCategoryMenu] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
@@ -64,13 +65,30 @@ const InventoryView = ({ inventory, addAmounts, handleAddAmountChange, validateS
     setIsDeleteModalOpen(true);
   };
 
+  const clearSearch = () => {
+    setSearchTerm('');
+  };
+
+  // Highlight matching text
+  const highlightMatch = (text, search) => {
+    if (!search) return text;
+    const regex = new RegExp(`(${search})`, 'gi');
+    const parts = String(text).split(regex);
+    return parts.map((part, i) => 
+      regex.test(part) ? 
+        <mark key={i} className="bg-yellow-200 text-slate-800 px-0.5 rounded font-bold">{part}</mark> : 
+        part
+    );
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
           <h2 className="text-3xl font-black text-slate-800 tracking-tighter flex items-center gap-3">
-          <Archive className="w-8 h-8 text-red-600" /> Manajemen Inventaris & Stok</h2>
+            <Archive className="w-8 h-8 text-red-600" /> Manajemen Inventaris & Stok
+          </h2>
           <p className="text-slate-400 font-medium text-sm italic mt-1">
             Pantau dan validasi ketersediaan logistik kantor secara akurat.
           </p>
@@ -86,16 +104,86 @@ const InventoryView = ({ inventory, addAmounts, handleAddAmountChange, validateS
         )}
       </div>
 
-      <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-        <div className="relative w-full md:w-96">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400" />
-          <input 
-            type="text"
-            placeholder="Cari nama barang atau kode..."
-            className="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:bg-white focus:border-red-200 outline-none transition-all"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+      {/* --- REVISI: SEARCH BAR DENGAN UI/UX LEBIH MODERN --- */}
+      <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+          {/* Search Input dengan Enhanced UX */}
+          <div className={`relative w-full md:w-[500px] transition-all duration-300 ${isSearchFocused ? 'scale-[1.02]' : ''}`}>
+            <div className={`absolute inset-0 bg-gradient-to-r from-red-500/20 to-orange-500/20 rounded-xl blur transition-opacity duration-300 ${isSearchFocused ? 'opacity-100' : 'opacity-0'}`}></div>
+            <div className="relative flex items-center">
+              <div className={`absolute left-4 top-1/2 -translate-y-1/2 transition-all duration-300 ${isSearchFocused ? 'text-red-600 scale-110' : 'text-slate-400'}`}>
+                <Search className="w-5 h-5" />
+              </div>
+              <input 
+                type="text"
+                placeholder="Cari nama barang atau kode..."
+                className={`w-full pl-12 pr-24 py-3.5 bg-slate-50 border-2 rounded-xl text-sm font-medium transition-all duration-300 outline-none
+                  ${isSearchFocused 
+                    ? 'bg-white border-red-200 shadow-lg shadow-red-100/50 text-slate-800' 
+                    : 'border-slate-100 text-slate-600 hover:border-slate-200'
+                  }`}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setIsSearchFocused(false)}
+              />
+              
+              {/* Search Status Indicator */}
+              {searchTerm && (
+                <div className="absolute right-20 top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-2 py-1 bg-red-50 rounded-lg">
+                  <span className="text-[10px] font-black text-red-600">{processedData.length} Ditemukan</span>
+                </div>
+              )}
+              
+              {/* Clear Button */}
+              {searchTerm && (
+                <button 
+                  onClick={clearSearch}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 bg-slate-200 hover:bg-red-500 hover:text-white rounded-lg transition-all duration-300 group"
+                  title="Hapus Pencarian"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+            
+            {/* Search Tips */}
+            {!searchTerm && (
+              <div className="absolute -bottom-6 left-0 flex items-center gap-2 text-[10px] text-slate-400 font-medium">
+              </div>
+            )}
+          </div>
+
+          {/* Active Filters Summary */}
+          {(searchTerm || categoryFilter !== 'Semua') && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[11px] font-bold text-slate-400 tracking-tight">Filter Aktif:</span>
+              {searchTerm && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-700 rounded-lg text-[10px] font-black border border-red-100">
+                  <Search className="w-3 h-3" />
+                  "{searchTerm}"
+                  <button onClick={clearSearch} className="hover:bg-red-100 rounded p-0.5 transition-colors">
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+              {categoryFilter !== 'Semua' && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-[10px] font-black border border-blue-100">
+                  <Filter className="w-3 h-3" />
+                  {categoryFilter}
+                  <button onClick={() => setCategoryFilter('Semua')} className="hover:bg-blue-100 rounded p-0.5 transition-colors">
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+              <button 
+                onClick={() => { clearSearch(); setCategoryFilter('Semua'); }}
+                className="px-3 py-1.5 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-lg text-[10px] font-black transition-all"
+              >
+                Reset Semua
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -176,11 +264,13 @@ const InventoryView = ({ inventory, addAmounts, handleAddAmountChange, validateS
                         </div>
                         <div className="min-w-0">
                           <h4 className="text-base font-bold text-slate-800 leading-tight block">
-                            {item.name}
+                            {searchTerm ? highlightMatch(item.name, searchTerm) : item.name}
                           </h4>
                           <div className="flex items-center gap-1.5 mt-1 text-slate-400">
                             <Hash className="w-3.5 h-3.5" />
-                            <p className="text-[12px] font-bold tracking-tight">Code: {item.code}</p>
+                            <p className="text-[12px] font-bold tracking-tight">
+                              Code: {searchTerm ? highlightMatch(item.code, searchTerm) : item.code}
+                            </p>
                           </div>
                         </div>
                       </div>
