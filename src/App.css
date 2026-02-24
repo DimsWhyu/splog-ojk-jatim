@@ -184,22 +184,3 @@ input, select, textarea {
   -webkit-mask-image: linear-gradient(to bottom, transparent 0%, transparent 80%, black 100%);
   mask-image: linear-gradient(to bottom, transparent 0%, transparent 80%, black 100%);
 }
-
-.bg-pattern-top {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: url('./image/Bg_Splog.png');
-  background-position: top center; /* Posisikan gambar di atas */
-  background-size: 600px; 
-  background-repeat: repeat-x; 
-  opacity: 0.15; 
-  pointer-events: none; 
-  z-index: 0; 
-  
-  /* Efek Masking Dibalik: Terlihat jelas di atas (0%), lalu memudar hingga 20% dan transparan total di bawahnya */
-  -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 30%, transparent 100%);
-  mask-image: linear-gradient(to bottom, black 0%, transparent 30%, transparent 100%);
-}
