@@ -16,7 +16,7 @@ const AddItemView = ({ inventory, onAddItem, onCancel }) => {
     image: ''
   });
 
-  const [imageMode, setImageMode] = useState('upload'); 
+  const [imageMode, setImageMode] = useState('url'); // Default ke URL
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [errors, setErrors] = useState({});
@@ -25,6 +25,7 @@ const AddItemView = ({ inventory, onAddItem, onCancel }) => {
   const [newCategory, setNewCategory] = useState('');
   const [formProgress, setFormProgress] = useState(0);
   const [showCodeHelper, setShowCodeHelper] = useState(false);
+  const [isCompressing, setIsCompressing] = useState(false);
   
   const suggestionRef = useRef(null);
   const codeHelperRef = useRef(null);
@@ -63,20 +64,71 @@ const AddItemView = ({ inventory, onAddItem, onCancel }) => {
     setShowCodeHelper(false);
   };
 
-  const handleFileChange = (e) => {
+  // --- BARU: Kompres gambar sebelum convert ke base64 ---
+  const compressImage = (file, maxWidth = 400, maxHeight = 400, quality = 0.7) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          // Resize maintain aspect ratio
+          if (width > maxWidth) {
+            height = (height * maxWidth) / width;
+            width = maxWidth;
+          }
+          if (height > maxHeight) {
+            width = (width * maxHeight) / height;
+            height = maxHeight;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          // Compress to JPEG with quality setting
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+          resolve(compressedDataUrl);
+        };
+      };
+    });
+  };
+
+  const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 2 * 1024 * 1024) { 
         setErrors({ ...errors, image: 'Ukuran file maksimal 2MB' });
         return;
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData({ ...formData, image: reader.result }); 
+
+      const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        setErrors({ ...errors, image: 'Format file harus JPG, PNG, atau WEBP' });
+        return;
+      }
+
+      try {
+        setIsCompressing(true);
+        
+        // Kompres gambar dulu
+        const compressedImage = await compressImage(file, 400, 400, 0.7);
+        
+        setFormData({ ...formData, image: compressedImage }); 
         setImageMode('url'); 
         if (errors.image) setErrors({ ...errors, image: null });
-      };
-      reader.readAsDataURL(file);
+        
+        setIsCompressing(false);
+      } catch (error) {
+        setErrors({ ...errors, image: 'Gagal memproses gambar' });
+        setIsCompressing(false);
+      }
     }
   };
 
@@ -130,7 +182,7 @@ const AddItemView = ({ inventory, onAddItem, onCancel }) => {
       image: ''
     });
     setErrors({});
-    setImageMode('upload');
+    setImageMode('url');
   };
 
   const handleAddNewCategory = () => {
@@ -356,12 +408,12 @@ const AddItemView = ({ inventory, onAddItem, onCancel }) => {
                 className={`${getInputStyle('unit')} text-center`} 
                 value={formData.unit} 
                 onChange={(e) => setFormData({...formData, unit: e.target.value})}
-                list="unit-suggestions"
               />
+              {errors.unit && <p className="text-[10px] font-bold text-red-500 px-1 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.unit}</p>}
             </div>
           </div>
 
-          {/* Image Upload Section - ENHANCED */}
+          {/* Image Upload Section - WITH COMPRESSION */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <label className="text-[13px] font-bold text-slate-400 px-1 flex items-center gap-2"><ImagePlus className="w-3 h-3" /> Media Gambar</label>
@@ -420,30 +472,54 @@ const AddItemView = ({ inventory, onAddItem, onCancel }) => {
                       accept="image/*" 
                       onChange={handleFileChange} 
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
+                      disabled={isCompressing}
                     />
-                    <div className="w-full py-12 border-2 border-dashed border-slate-300 rounded-[13px] flex flex-col items-center justify-center gap-3 bg-white group-hover:border-red-400 group-hover:bg-red-50/30 transition-all">
-                      <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center group-hover:bg-red-100 transition-all">
-                        <Upload className="w-6 h-6 text-slate-400 group-hover:text-red-600" />
-                      </div>
-                      <div className="text-center">
-                        <p className="text-[11px] font-bold text-slate-500 group-hover:text-red-600 transition-colors">Klik untuk upload gambar barang</p>
-                        <p className="text-[9px] font-medium text-slate-400 mt-1">Max 2MB • JPG, PNG, WEBP</p>
-                      </div>
+                    <div className={`w-full py-12 border-2 border-dashed rounded-[13px] flex flex-col items-center justify-center gap-3 bg-white transition-all ${
+                      isCompressing 
+                        ? 'border-red-400 bg-red-50/30' 
+                        : 'border-slate-300 group-hover:border-red-400 group-hover:bg-red-50/30'
+                    }`}>
+                      {isCompressing ? (
+                        <>
+                          <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                            <Loader2 className="w-6 h-6 text-red-600 animate-spin" />
+                          </div>
+                          <div className="text-center">
+                            <p className="text-[11px] font-bold text-red-600">Mengompres gambar...</p>
+                            <p className="text-[9px] font-medium text-slate-400 mt-1">Mohon tunggu</p>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center group-hover:bg-red-100 transition-all">
+                            <Upload className="w-6 h-6 text-slate-400 group-hover:text-red-600" />
+                          </div>
+                          <div className="text-center">
+                            <p className="text-[11px] font-bold text-slate-500 group-hover:text-red-600 transition-colors">Klik untuk upload gambar barang</p>
+                            <p className="text-[9px] font-medium text-slate-400 mt-1">Max 2MB • JPG, PNG, WEBP</p>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 ) : (
                   <div className="space-y-2">
                     <input 
                       type="text" 
-                      placeholder="https://example.com/image.jpg" 
+                      placeholder="https://i.ibb.co/xxxxx/image.jpg" 
                       className={getInputStyle('image')} 
                       value={formData.image} 
                       onChange={(e) => setFormData({...formData, image: e.target.value})} 
                     />
-                    {formData.image && (
-                      <p className="text-[9px] font-medium text-slate-400 flex items-center gap-1">
-                        <Info className="w-3 h-3" /> Pastikan URL gambar dapat diakses secara publik
-                      </p>
+                    <div className="flex items-center gap-2 text-[9px] text-slate-500">
+                      <Info className="w-3 h-3" />
+                      <span>Contoh URL: https://i.ibb.co/abc123/image.jpg</span>
+                    </div>
+                    {formData.image && formData.image.startsWith('data:') && (
+                      <div className="flex items-center gap-2 text-[9px] text-amber-600 bg-amber-50 p-2 rounded-lg">
+                        <AlertCircle className="w-3 h-3" />
+                        <span>Link base64 sangat panjang! Disarankan menggunakan URL hosting gambar.</span>
+                      </div>
                     )}
                   </div>
                 )}
@@ -463,7 +539,7 @@ const AddItemView = ({ inventory, onAddItem, onCancel }) => {
             </button>
             <button 
               type="submit" 
-              disabled={isSubmitting} 
+              disabled={isSubmitting || isCompressing} 
               className="flex-[2] py-5 bg-gradient-to-r from-red-600 to-[#4a0404] text-white font-bold rounded-[13px] shadow-xl shadow-red-200 hover:shadow-red-300 active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (

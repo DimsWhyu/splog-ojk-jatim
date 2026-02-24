@@ -15,7 +15,7 @@ import AnalyticsDashboard from './components/admin/AnalyticsDashboard';
 import { CartProvider, useCart } from './context/CartContext';
 import './App.css';
 
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxcAY_t_tr74v295r3M7gRqnZGs-clhIfucjR9GHNSbDypqta5JNzLg2ndmbUMPJa_w/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx1favnpUXEXwQOgkDOwggi5wpx1hVb5BOQntza3A2cSeQ-7cOOwSrUHUPQCU5iraXW/exec";
 
 const INITIAL_REQUESTS = [];
 
