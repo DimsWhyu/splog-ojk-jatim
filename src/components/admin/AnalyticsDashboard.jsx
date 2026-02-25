@@ -7,15 +7,15 @@ import {
 import {
   Calendar, TrendingUp, Package,
   Users, ChevronDown, Check, ChevronLeft, ChevronRight,
-  Layers, Activity, RotateCcw, Target, FileSpreadsheet, FileText,
-  Search, X
+  Layers, Activity, RotateCcw, Target, FileSpreadsheet,
+  Search, X, Clock, RefreshCw
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 // --- MAPPING HEX COLORS ---
 const getThemeHex = (cat) => {
   const mapping = {
-    'Semua': '#b91c1c', 'ATK': '#1d4ed8', 'Pembersih Ruangan': '#10b981',
+    'Semua': '#B91C1C', 'ATK': '#1d4ed8', 'Pembersih Ruangan': '#10b981',
     'Pembersih Dapur': '#06b6d4', 'Pembersih Toilet': '#6366f1', 'Pembersih Toilet/Dapur': '#14b8a6',
     'Pembersih Serbaguna': '#0ea5e9', 'Pembersih Furniture': '#64748b', 'Pewangi': '#f43f5e',
     'Pewangi Lemari': '#e11d48', 'Pembasmi serangga': '#f97316', 'Plastik Sampah': '#27272a',
@@ -45,11 +45,11 @@ const InlineCalendar = ({ selectedDate, onChange }) => {
     for (let d = 1; d <= daysInMonth; d++) {
       const currentStr = `${year}-${(month + 1).toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
       const isSelected = selectedDate === currentStr;
-      slots.push(<button key={d} type="button" onClick={() => onChange(currentStr)} className={`h-8 w-8 rounded-full text-[10px] font-bold transition-all ${isSelected ? 'bg-red-600 text-white shadow-md' : 'text-slate-600 hover:bg-red-50 hover:text-red-600'}`}>{d}</button>);
+      slots.push(<button key={d} type="button" onClick={() => onChange(currentStr)} className={`h-8 w-8 rounded-[13px] text-[10px] font-bold transition-all ${isSelected ? 'bg-[#B91C1C] text-white shadow-md' : 'text-slate-600 hover:bg-red-50 hover:text-[#B91C1C]'}`}>{d}</button>);
     }
     return (
       <div className="animate-in fade-in duration-300">
-        <div className="grid grid-cols-7 mb-1 text-center bg-slate-50 rounded-lg py-1">{dayNames.map(d => <div key={d} className="text-[8px] font-black text-slate-400 uppercase tracking-tight">{d}</div>)}</div>
+        <div className="grid grid-cols-7 mb-1 text-center bg-slate-50 rounded-[13px] py-1">{dayNames.map(d => <div key={d} className="text-[8px] font-black text-slate-400 uppercase tracking-tight">{d}</div>)}</div>
         <div className="grid grid-cols-7 gap-y-1 justify-items-center">{slots}</div>
       </div>
     );
@@ -59,17 +59,17 @@ const InlineCalendar = ({ selectedDate, onChange }) => {
       <div className="flex items-center justify-between mb-4 border-b border-slate-50 pb-2">
         <button type="button" onClick={() => setViewDate(new Date(year, month - 1, 1))} className="p-1 hover:bg-slate-50 rounded-full text-slate-400"><ChevronLeft size={16} /></button>
         <div className="flex gap-1">
-          <button type="button" onClick={() => setMode('months')} className="text-[11px] font-black text-slate-700 uppercase hover:text-red-600 transition-colors">{monthNames[month]}</button>
-          <button type="button" onClick={() => setMode('years')} className="text-[11px] font-black text-slate-700 uppercase hover:text-red-600 transition-colors">{year}</button>
+          <button type="button" onClick={() => setMode('months')} className="text-[11px] font-black text-slate-700 uppercase hover:text-[#B91C1C] transition-colors">{monthNames[month]}</button>
+          <button type="button" onClick={() => setMode('years')} className="text-[11px] font-black text-slate-700 uppercase hover:text-[#B91C1C] transition-colors">{year}</button>
         </div>
         <button type="button" onClick={() => setViewDate(new Date(year, month + 1, 1))} className="p-1 hover:bg-slate-50 rounded-full text-slate-400"><ChevronRight size={16} /></button>
       </div>
       {mode === 'days' && renderDays()}
       {mode === 'months' && (
-        <div className="grid grid-cols-3 gap-2 animate-in zoom-in-95">{monthNames.map((m, idx) => <button key={m} type="button" onClick={() => handleMonthSelect(idx)} className={`py-2 text-[10px] font-bold rounded-lg ${month === idx ? 'bg-red-600 text-white' : 'bg-slate-50 text-slate-600 hover:bg-red-50'}`}>{m.substring(0, 3)}</button>)}</div>
+        <div className="grid grid-cols-3 gap-2 animate-in zoom-in-95">{monthNames.map((m, idx) => <button key={m} type="button" onClick={() => handleMonthSelect(idx)} className={`py-2 text-[10px] font-bold rounded-[13px] ${month === idx ? 'bg-[#B91C1C] text-white' : 'bg-slate-50 text-slate-600 hover:bg-red-50 hover:text-[#B91C1C]'}`}>{m.substring(0, 3)}</button>)}</div>
       )}
       {mode === 'years' && (
-        <div className="grid grid-cols-3 gap-2 max-h-40 overflow-y-auto custom-scrollbar pr-1 animate-in zoom-in-95">{Array.from({ length: 12 }, (_, i) => year - 6 + i).map(yr => <button key={yr} type="button" onClick={() => handleYearSelect(yr)} className={`py-2 text-[10px] font-bold rounded-lg ${year === yr ? 'bg-red-600 text-white' : 'bg-slate-50 text-slate-600 hover:bg-red-50'}`}>{yr}</button>)}</div>
+        <div className="grid grid-cols-3 gap-2 max-h-40 overflow-y-auto custom-scrollbar pr-1 animate-in zoom-in-95">{Array.from({ length: 12 }, (_, i) => year - 6 + i).map(yr => <button key={yr} type="button" onClick={() => handleYearSelect(yr)} className={`py-2 text-[10px] font-bold rounded-[13px] ${year === yr ? 'bg-[#B91C1C] text-white' : 'bg-slate-50 text-slate-600 hover:bg-red-50 hover:text-[#B91C1C]'}`}>{yr}</button>)}</div>
       )}
     </div>
   );
@@ -78,7 +78,7 @@ const InlineCalendar = ({ selectedDate, onChange }) => {
 // --- KPI CARD COMPONENT ---
 const KPICard = ({ icon: Icon, title, value, subtext, trend, color = "red" }) => {
   const colorClasses = {
-    red: "from-red-500 to-red-600",
+    red: "from-[#B91C1C] to-[#991b1b]",
     blue: "from-blue-500 to-blue-600",
     emerald: "from-emerald-500 to-emerald-600",
     amber: "from-amber-500 to-amber-600",
@@ -88,10 +88,10 @@ const KPICard = ({ icon: Icon, title, value, subtext, trend, color = "red" }) =>
       <div className="flex items-start justify-between">
         <div>
           <p className="text-[9px] font-black text-slate-400 uppercase tracking-tight">{title}</p>
-          <p className="text-xl font-black text-slate-800 mt-1 tracking-tight">{value}</p>
+          <p className="text-2xl font-black text-slate-800 mt-1 tracking-tight">{value}</p>
           {subtext && <p className="text-[10px] text-slate-400 mt-0.5 font-medium">{subtext}</p>}
         </div>
-        <div className={`w-10 h-10 rounded-[10px] bg-gradient-to-br ${colorClasses[color]} flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform`}>
+        <div className={`w-10 h-10 rounded-[13px] bg-gradient-to-br ${colorClasses[color]} flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform`}>
           <Icon className="w-5 h-5 text-white" />
         </div>
       </div>
@@ -103,6 +103,35 @@ const KPICard = ({ icon: Icon, title, value, subtext, trend, color = "red" }) =>
           </span>
         </div>
       )}
+    </div>
+  );
+};
+
+// --- DATE PRESET BUTTONS ---
+const DatePresets = ({ onPresetSelect, activePreset }) => {
+  const presets = [
+    { label: '7H', days: 7 },
+    { label: '30H', days: 30 },
+    { label: '90H', days: 90 },
+    { label: '1T', days: 365 },
+  ];
+
+  return (
+    <div className="flex gap-1">
+      {presets.map((preset) => (
+        <button
+          key={preset.label}
+          type="button"
+          onClick={() => onPresetSelect(preset.days, preset.label)}
+          className={`px-2.5 py-1.5 text-[9px] font-bold rounded-[13px] transition-all ${
+            activePreset === preset.label 
+              ? 'bg-[#B91C1C] text-white shadow-sm' 
+              : 'text-slate-500 hover:bg-red-50 hover:text-[#B91C1C]'
+          }`}
+        >
+          {preset.label}
+        </button>
+      ))}
     </div>
   );
 };
@@ -123,6 +152,14 @@ const AnalyticsDashboard = ({ requests, inventory }) => {
   const [topUsersLimit, setTopUsersLimit] = useState(5);
   const [isTopUsersOpen, setIsTopUsersOpen] = useState(false);
   const [itemSearch, setItemSearch] = useState('');
+  const [aiText, setAiText] = useState('');
+  
+  // ✅ NEW: Last Updated timestamp
+  const [lastUpdated, setLastUpdated] = useState(new Date());
+  // ✅ NEW: Active Preset indicator
+  const [activePreset, setActivePreset] = useState('');
+  // ✅ NEW: Refresh loading state
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Refs for each specific chart section
   const areaChartRef = useRef(null);
@@ -137,8 +174,6 @@ const AnalyticsDashboard = ({ requests, inventory }) => {
   const endCalRef = useRef(null);
   const topItemsRef = useRef(null);
   const topUsersRef = useRef(null);
-
-  const [aiText, setAiText] = useState('');
 
   const categories = useMemo(() => [...new Set(inventory.map(item => item.category).filter(Boolean))], [inventory]);
   const allItems = useMemo(() => [...new Set(inventory.map(item => ({
@@ -296,25 +331,40 @@ const AnalyticsDashboard = ({ requests, inventory }) => {
     setSelectedCategories([]);
     setSelectedItems([]);
     setSelectedStatus('Semua');
+    setActivePreset('');
+    setLastUpdated(new Date());
   };
 
   const removeSelectedItem = (itemName) => {
     setSelectedItems(prev => prev.filter(item => item !== itemName));
   };
 
-  // --- BARU: Fungsi untuk handle preset timeline ---
-  const handleDatePreset = (days) => {
+  // --- Fungsi untuk handle preset timeline ---
+  const handleDatePreset = (days, presetLabel) => {
     const end = new Date();
     const start = new Date();
     start.setDate(start.getDate() - days);
     setEndDate(end.toISOString().split('T')[0]);
     setStartDate(start.toISOString().split('T')[0]);
+    setActivePreset(presetLabel);
+    setLastUpdated(new Date());
   };
+
+  // ✅ NEW: Handle Refresh
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    setTimeout(() => {
+      setLastUpdated(new Date());
+      setIsRefreshing(false);
+    }, 1000);
+  };
+
+  const totalQty = stats.items.reduce((acc, curr) => acc + curr.qty, 0);
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-12 animate-in fade-in duration-700">
-
-      {/* 1. HEADER PANEL */}
+      
+      {/* 1. HEADER PANEL - ENHANCED */}
       <div className="flex items-center justify-between relative z-10">
         <div className="space-y-1">
           <h2 className="text-3xl font-black text-slate-800 tracking-tight flex items-center gap-4">
@@ -323,43 +373,55 @@ const AnalyticsDashboard = ({ requests, inventory }) => {
           <p className="text-slate-400 font-medium text-sm italic pl-1">Monitoring tren dan performa inventaris OJK Provinsi Jawa Timur.</p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <button onClick={handleExportExcel} className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white hover:bg-emerald-700 rounded-[13px] font-black text-[11px] uppercase tracking-tight transition-all shadow-md active:scale-95">
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* ✅ Last Updated Indicator */}
+          <div className="hidden lg:flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-[13px] border border-slate-100">
+            <Clock className="w-3.5 h-3.5 text-slate-400" />
+            <span className="text-[9px] font-bold text-slate-500">
+              Update: {lastUpdated.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+            </span>
+          </div>
+          
+          {/* ✅ Refresh Button */}
+          <button 
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="flex items-center gap-2 px-3 py-2 bg-slate-100 text-slate-600 hover:bg-white hover:text-[#B91C1C] rounded-[13px] font-black text-[9px] uppercase tracking-tight transition-all disabled:opacity-50 border border-slate-200"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} /> Refresh
+          </button>
+          
+          <button onClick={handleExportExcel} className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white hover:bg-white hover:text-emerald-600 rounded-[13px] font-black text-[9px] uppercase tracking-tight transition-all shadow-md hover:shadow-lg active:scale-95 border border-emerald-600">
             <FileSpreadsheet className="w-4 h-4" /> Export Excel
           </button>
-          <div className="w-[1px] h-6 bg-slate-200 mx-1" />
-          <button type="button" onClick={resetFilters} className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-[13px] font-black text-[11px] uppercase tracking-tight transition-all border border-slate-200">
-            <RotateCcw className="w-3.5 h-3.5" /> Reset Filter
+          <div className="w-[1px] h-6 bg-slate-200" />
+          <button type="button" onClick={resetFilters} className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-600 hover:bg-white hover:text-[#B91C1C] rounded-[13px] font-black text-[9px] uppercase tracking-tight transition-all border border-slate-200">
+            <RotateCcw className="w-3.5 h-3.5" /> Reset
           </button>
         </div>
       </div>
 
-      {/* 2. FILTER ROW */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 relative z-20">
-        {/* Date Filter - DENGAN PRESET TIMELINE */}
-        <div className="bg-white p-5 rounded-[13px] border border-slate-100 shadow-sm space-y-3">
+      {/* 2. FILTER ROW - ENHANCED */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 relative z-20">
+        {/* Date Filter */}
+        <div className="bg-white p-4 rounded-[13px] border border-slate-100 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
-            <label className="text-[10px] font-black text-slate-500 uppercase tracking-tight flex items-center gap-2">
-              <Calendar className="w-3.5 h-3.5 text-red-600" /> Rentang Waktu
+            <label className="text-[9px] font-black text-slate-500 uppercase tracking-wider flex items-center gap-2">
+              <Calendar className="w-3.5 h-3.5 text-[#B91C1C]" /> Rentang Waktu
             </label>
-            {/* BARU: Preset Timeline Buttons */}
-            <div className="flex gap-1">
-              <button type="button" onClick={() => handleDatePreset(7)} className="px-2 py-1 text-[9px] font-bold text-slate-500 hover:text-red-600 hover:bg-red-50 rounded transition-all">7H</button>
-              <button type="button" onClick={() => handleDatePreset(30)} className="px-2 py-1 text-[9px] font-bold text-slate-500 hover:text-red-600 hover:bg-red-50 rounded transition-all">30H</button>
-              <button type="button" onClick={() => handleDatePreset(90)} className="px-2 py-1 text-[9px] font-bold text-slate-500 hover:text-red-600 hover:bg-red-50 rounded transition-all">90H</button>
-              <button type="button" onClick={() => handleDatePreset(365)} className="px-2 py-1 text-[9px] font-bold text-slate-500 hover:text-red-600 hover:bg-red-50 rounded transition-all">1T</button>
-            </div>
+            {/* ✅ Active Preset Indicator */}
+            <DatePresets onPresetSelect={handleDatePreset} activePreset={activePreset} />
           </div>
           <div className="flex items-center gap-2">
             <div className="relative flex-1" ref={startCalRef}>
-              <button type="button" onClick={() => setShowStartCal(!showStartCal)} className="w-full bg-slate-50 rounded-[10px] px-3 py-2.5 text-[11px] font-bold text-slate-700 flex justify-between items-center hover:bg-slate-100 transition-all border border-slate-100 truncate">
+              <button type="button" onClick={() => setShowStartCal(!showStartCal)} className="w-full bg-slate-50 rounded-[13px] px-3 py-2.5 text-[10px] font-bold text-slate-700 flex justify-between items-center hover:bg-white hover:text-[#B91C1C] transition-all border border-slate-100 truncate">
                 {startDate ? startDate.split('-').reverse().join('/') : 'Awal'} <Calendar size={12} className="text-slate-400" />
               </button>
               {showStartCal && <div className="absolute top-full left-0 mt-2 z-[999] shadow-2xl animate-in zoom-in-95 origin-top-left"><InlineCalendar selectedDate={startDate} onChange={(d) => { setStartDate(d); setShowStartCal(false); }} /></div>}
             </div>
             <span className="text-slate-300 font-black">-</span>
             <div className="relative flex-1" ref={endCalRef}>
-              <button type="button" onClick={() => setShowEndCal(!showEndCal)} className="w-full bg-slate-50 rounded-[10px] px-3 py-2.5 text-[11px] font-bold text-slate-700 flex justify-between items-center hover:bg-slate-100 transition-all border border-slate-100 truncate">
+              <button type="button" onClick={() => setShowEndCal(!showEndCal)} className="w-full bg-slate-50 rounded-[13px] px-3 py-2.5 text-[10px] font-bold text-slate-700 flex justify-between items-center hover:bg-white hover:text-[#B91C1C] transition-all border border-slate-100 truncate">
                 {endDate ? endDate.split('-').reverse().join('/') : 'Akhir'} <Calendar size={12} className="text-slate-400" />
               </button>
               {showEndCal && <div className="absolute top-full right-0 mt-2 z-[999] shadow-2xl animate-in zoom-in-95 origin-top-right"><InlineCalendar selectedDate={endDate} onChange={(d) => { setEndDate(d); setShowEndCal(false); }} /></div>}
@@ -368,11 +430,11 @@ const AnalyticsDashboard = ({ requests, inventory }) => {
         </div>
 
         {/* Category Filter */}
-        <div className="bg-white p-5 rounded-[13px] border border-slate-100 shadow-sm space-y-3 relative" ref={dropdownRef}>
-          <label className="text-[10px] font-black text-slate-500 uppercase tracking-tight flex items-center gap-2">
-            <Layers className="w-3.5 h-3.5 text-red-600" /> Filter Kategori
+        <div className="bg-white p-4 rounded-[13px] border border-slate-100 shadow-sm space-y-3 relative" ref={dropdownRef}>
+          <label className="text-[9px] font-black text-slate-500 uppercase tracking-wider flex items-center gap-2">
+            <Layers className="w-3.5 h-3.5 text-[#B91C1C]" /> Filter Kategori
           </label>
-          <button type="button" onClick={() => setIsCatOpen(!isCatOpen)} className="w-full bg-slate-50 rounded-[10px] px-4 py-2.5 text-[11px] font-bold text-slate-700 flex justify-between items-center hover:bg-slate-100 transition-all border border-slate-100">
+          <button type="button" onClick={() => setIsCatOpen(!isCatOpen)} className="w-full bg-slate-50 rounded-[13px] px-4 py-2.5 text-[10px] font-bold text-slate-700 flex justify-between items-center hover:bg-white hover:text-[#B91C1C] transition-all border border-slate-100">
             <span className="truncate">{selectedCategories.length > 0 ? `${selectedCategories.length} Kategori` : 'Semua Kategori'}</span>
             <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isCatOpen ? 'rotate-180' : ''}`} />
           </button>
@@ -380,12 +442,12 @@ const AnalyticsDashboard = ({ requests, inventory }) => {
             <div className="absolute z-50 left-0 right-0 top-full mt-2 bg-white border border-slate-100 shadow-xl rounded-[13px] overflow-hidden p-2 animate-in zoom-in-95">
               <div className="max-h-48 overflow-y-auto custom-scrollbar space-y-1">
                 {categories.map(cat => (
-                  <label key={cat} className="flex items-center gap-3 px-3 py-2 hover:bg-red-50 rounded-[8px] cursor-pointer group">
-                    <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${selectedCategories.includes(cat) ? 'bg-red-600 border-red-600' : 'border-slate-300'}`}>
+                  <label key={cat} className="flex items-center gap-3 px-3 py-2 hover:bg-white hover:text-[#B91C1C] rounded-[13px] cursor-pointer group border border-transparent hover:border-slate-100">
+                    <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${selectedCategories.includes(cat) ? 'bg-[#B91C1C] border-[#B91C1C]' : 'border-slate-300'}`}>
                       {selectedCategories.includes(cat) && <Check className="w-3 h-3 text-white" />}
                     </div>
                     <input type="checkbox" className="hidden" checked={selectedCategories.includes(cat)} onChange={() => setSelectedCategories(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat])} />
-                    <span className="text-[11px] font-bold text-slate-600 group-hover:text-red-600">{cat}</span>
+                    <span className="text-[10px] font-bold text-slate-600 group-hover:text-[#B91C1C]">{cat}</span>
                   </label>
                 ))}
               </div>
@@ -394,41 +456,36 @@ const AnalyticsDashboard = ({ requests, inventory }) => {
         </div>
 
         {/* Item Filter */}
-        <div className="bg-white p-5 rounded-[13px] border border-slate-100 shadow-sm space-y-3 relative" ref={itemDropdownRef}>
-          <label className="text-[10px] font-black text-slate-500 uppercase tracking-tight flex items-center gap-2">
-            <Package className="w-3.5 h-3.5 text-red-600" /> Filter Item
+        <div className="bg-white p-4 rounded-[13px] border border-slate-100 shadow-sm space-y-3 relative" ref={itemDropdownRef}>
+          <label className="text-[9px] font-black text-slate-500 uppercase tracking-wider flex items-center gap-2">
+            <Package className="w-3.5 h-3.5 text-[#B91C1C]" /> Filter Item
           </label>
-          <button type="button" onClick={() => setIsItemOpen(!isItemOpen)} className="w-full bg-slate-50 rounded-[10px] px-4 py-2.5 text-[11px] font-bold text-slate-700 flex justify-between items-center hover:bg-slate-100 transition-all border border-slate-100">
-            <span className="truncate">{selectedItems.length > 0 ? `${selectedItems.length} Item Dipilih` : 'Semua Item'}</span>
+          <button type="button" onClick={() => setIsItemOpen(!isItemOpen)} className="w-full bg-slate-50 rounded-[13px] px-4 py-2.5 text-[10px] font-bold text-slate-700 flex justify-between items-center hover:bg-white hover:text-[#B91C1C] transition-all border border-slate-100">
+            <span className="truncate">{selectedItems.length > 0 ? `${selectedItems.length} Item` : 'Semua Item'}</span>
             <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isItemOpen ? 'rotate-180' : ''}`} />
           </button>
           {isItemOpen && (
             <div className="absolute z-50 left-0 right-0 top-full mt-2 bg-white border border-slate-100 shadow-xl rounded-[13px] overflow-hidden p-3 animate-in zoom-in-95 w-full min-w-[300px]">
-              {/* Search Input */}
               <div className="relative mb-3">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
                   type="text"
                   value={itemSearch}
                   onChange={(e) => setItemSearch(e.target.value)}
-                  placeholder="Cari nama atau kode barang..."
-                  className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                  placeholder="Cari nama atau kode..."
+                  className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-[13px] text-[10px] font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#B91C1C] focus:bg-white"
                   autoFocus
                 />
                 {itemSearch && (
-                  <button
-                    onClick={() => setItemSearch('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                  >
+                  <button onClick={() => setItemSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                     <X className="w-4 h-4" />
                   </button>
                 )}
               </div>
-              {/* Selected Items Tags */}
               {selectedItems.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mb-3 pb-3 border-b border-slate-100">
                   {selectedItems.map(itemName => (
-                    <span key={itemName} className="inline-flex items-center gap-1 px-2 py-1 bg-red-50 text-red-700 rounded-md text-[9px] font-bold">
+                    <span key={itemName} className="inline-flex items-center gap-1 px-2 py-1 bg-red-50 text-red-700 rounded-[13px] text-[8px] font-bold">
                       {itemName}
                       <button onClick={() => removeSelectedItem(itemName)} className="hover:bg-red-100 rounded">
                         <X className="w-3 h-3" />
@@ -437,25 +494,19 @@ const AnalyticsDashboard = ({ requests, inventory }) => {
                   ))}
                 </div>
               )}
-              {/* Items List */}
               <div className="max-h-48 overflow-y-auto custom-scrollbar space-y-1">
                 {filteredItemsList.length === 0 ? (
-                  <p className="text-center text-[10px] text-slate-400 py-4">Item tidak ditemukan</p>
+                  <p className="text-center text-[9px] text-slate-400 py-4">Item tidak ditemukan</p>
                 ) : (
                   filteredItemsList.map(item => (
-                    <label key={item.name} className="flex items-center gap-3 px-2 py-2 hover:bg-red-50 rounded-[8px] cursor-pointer group">
-                      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${selectedItems.includes(item.name) ? 'bg-red-600 border-red-600' : 'border-slate-300'}`}>
+                    <label key={item.name} className="flex items-center gap-3 px-2 py-2 hover:bg-white hover:text-[#B91C1C] rounded-[13px] cursor-pointer group border border-transparent hover:border-slate-100">
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${selectedItems.includes(item.name) ? 'bg-[#B91C1C] border-[#B91C1C]' : 'border-slate-300'}`}>
                         {selectedItems.includes(item.name) && <Check className="w-3 h-3 text-white" />}
                       </div>
-                      <input
-                        type="checkbox"
-                        className="hidden"
-                        checked={selectedItems.includes(item.name)}
-                        onChange={() => setSelectedItems(prev => prev.includes(item.name) ? prev.filter(i => i !== item.name) : [...prev, item.name])}
-                      />
+                      <input type="checkbox" className="hidden" checked={selectedItems.includes(item.name)} onChange={() => setSelectedItems(prev => prev.includes(item.name) ? prev.filter(i => i !== item.name) : [...prev, item.name])} />
                       <div className="flex-1 min-w-0">
-                        <p className="text-[10px] font-bold text-slate-700 group-hover:text-red-600 truncate">{item.name}</p>
-                        {item.code && <p className="text-[8px] text-slate-400">{item.code}</p>}
+                        <p className="text-[9px] font-bold text-slate-700 group-hover:text-[#B91C1C] truncate">{item.name}</p>
+                        {item.code && <p className="text-[7px] text-slate-400">{item.code}</p>}
                       </div>
                     </label>
                   ))
@@ -466,18 +517,18 @@ const AnalyticsDashboard = ({ requests, inventory }) => {
         </div>
 
         {/* Status Filter */}
-        <div className="bg-white p-5 rounded-[13px] border border-slate-100 shadow-sm space-y-3 relative" ref={statusRef}>
-          <label className="text-[10px] font-black text-slate-500 uppercase tracking-tight flex items-center gap-2">
-            <Activity className="w-3.5 h-3.5 text-red-600" /> Status Approval
+        <div className="bg-white p-4 rounded-[13px] border border-slate-100 shadow-sm space-y-3 relative" ref={statusRef}>
+          <label className="text-[9px] font-black text-slate-500 uppercase tracking-wider flex items-center gap-2">
+            <Activity className="w-3.5 h-3.5 text-[#B91C1C]" /> Status
           </label>
-          <button type="button" onClick={() => setIsStatusOpen(!isStatusOpen)} className="w-full bg-slate-50 rounded-[10px] px-4 py-2.5 text-[11px] font-bold text-slate-700 flex justify-between items-center hover:bg-slate-100 transition-all border border-slate-100">
+          <button type="button" onClick={() => setIsStatusOpen(!isStatusOpen)} className="w-full bg-slate-50 rounded-[13px] px-4 py-2.5 text-[10px] font-bold text-slate-700 flex justify-between items-center hover:bg-white hover:text-[#B91C1C] transition-all border border-slate-100">
             <span>{selectedStatus}</span>
             <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isStatusOpen ? 'rotate-180' : ''}`} />
           </button>
           {isStatusOpen && (
             <div className="absolute z-50 left-0 right-0 top-full mt-2 bg-white border border-slate-100 shadow-xl rounded-[13px] overflow-hidden p-1 animate-in zoom-in-95">
               {statusOptions.map(opt => (
-                <button key={opt} type="button" onClick={() => { setSelectedStatus(opt); setIsStatusOpen(false); }} className={`w-full text-left px-4 py-2.5 text-[11px] font-bold rounded-[8px] transition-colors ${selectedStatus === opt ? 'bg-red-600 text-white' : 'text-slate-600 hover:bg-red-50 hover:text-red-600'}`}>
+                <button key={opt} type="button" onClick={() => { setSelectedStatus(opt); setIsStatusOpen(false); }} className={`w-full text-left px-4 py-2.5 text-[10px] font-bold rounded-[13px] transition-colors ${selectedStatus === opt ? 'bg-[#B91C1C] text-white' : 'text-slate-600 hover:bg-white hover:text-[#B91C1C] hover:border hover:border-slate-100'}`}>
                   {opt}
                 </button>
               ))}
@@ -489,7 +540,7 @@ const AnalyticsDashboard = ({ requests, inventory }) => {
       {/* 2.5. KPI CARDS ROW */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 relative z-15">
         <KPICard
-          icon={FileText}
+          icon={Target}
           title="Total Pengajuan"
           value={filteredData.length}
           subtext="Transaksi"
@@ -499,7 +550,7 @@ const AnalyticsDashboard = ({ requests, inventory }) => {
         <KPICard
           icon={Package}
           title="Total Unit Keluar"
-          value={stats.items.reduce((acc, curr) => acc + curr.qty, 0).toLocaleString('id-ID')}
+          value={totalQty.toLocaleString('id-ID')}
           subtext="Unit"
           trend={8}
           color="blue"
@@ -507,12 +558,12 @@ const AnalyticsDashboard = ({ requests, inventory }) => {
         <KPICard
           icon={Users}
           title="Rata-rata/User"
-          value={filteredData.length > 0 ? (stats.items.reduce((acc, curr) => acc + curr.qty, 0) / filteredData.length).toFixed(1) : 0}
+          value={filteredData.length > 0 ? (totalQty / filteredData.length).toFixed(1) : 0}
           subtext="Unit/Req"
           color="emerald"
         />
         <KPICard
-          icon={Target}
+          icon={Layers}
           title="Kategori Teratas"
           value={stats.topCat?.split('/')[0] || '-'}
           subtext={stats.topCat ? `${stats.category.find(c => c.name === stats.topCat)?.value || 0} unit` : ''}
@@ -521,38 +572,41 @@ const AnalyticsDashboard = ({ requests, inventory }) => {
       </div>
 
       {/* 4. AREA CHART */}
-      <div className="bg-white p-8 rounded-[13px] border border-slate-100 shadow-sm relative overflow-hidden" ref={areaChartRef}>
-        <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-tight mb-8 flex items-center gap-2">
-          <Target className="w-4 h-4 text-red-600" /> Analisis Tren Permintaan Logistik
-        </h4>
+      <div className="bg-white p-6 rounded-[13px] border border-slate-100 shadow-sm relative overflow-hidden" ref={areaChartRef}>
+        <div className="flex items-center justify-between mb-6">
+          <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-wider flex items-center gap-2">
+            <div className="w-2 h-2 bg-[#B91C1C] rounded-full" /> Analisis Tren Permintaan Logistik
+          </h4>
+          {stats.peakDate && (
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-red-50 rounded-[13px] border border-red-100">
+              <TrendingUp className="w-3.5 h-3.5 text-[#B91C1C]" />
+              <span className="text-[9px] font-black text-[#B91C1C]">Puncak: {stats.peakDate.date} ({stats.peakDate.count})</span>
+            </div>
+          )}
+        </div>
         <div className="h-[350px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={stats.timeline} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#DC2626" stopOpacity={0.7} />
-                  <stop offset="95%" stopColor="#DC2626" stopOpacity={0.02} />
+                  <stop offset="5%" stopColor="#B91C1C" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="#B91C1C" stopOpacity={0.02} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
               <XAxis dataKey="date" fontSize={9} axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontWeight: 600 }} dy={15} />
               <YAxis fontSize={9} axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontWeight: 600 }} />
-              <Tooltip content={({ active, payload, label }) => active && payload && (
-                <div className="bg-white p-3 border border-slate-200 shadow-lg rounded-lg">
-                  <p className="font-bold text-slate-600 text-[10px] mb-1">{label}</p>
-                  <p className="font-black text-red-600 text-sm">{payload[0].value} Pengajuan</p>
-                </div>
-              )} />
-              <Area type="monotone" dataKey="count" stroke="#DC2626" strokeWidth={3.5} fillOpacity={1} fill="url(#colorCount)" />
-              {stats.timeline.length > 0 && (
-                (() => {
-                  const peak = [...stats.timeline].sort((a, b) => b.count - a.count)[0];
-                  return (
-                    <ReferenceDot x={peak.date} y={peak.count} r={6} fill="#B91C1C" stroke="white" strokeWidth={2}>
-                      <LabelList dataKey="count" position="top" offset={12} fontSize={10} fontWeight={900} fill="#B91C1C" formatter={() => `Puncak: ${peak.count}`} />
-                    </ReferenceDot>
-                  );
-                })()
+              <Tooltip
+                content={({ active, payload, label }) => active && payload && (
+                  <div className="bg-white p-3 border border-slate-200 shadow-xl rounded-[13px]">
+                    <p className="font-bold text-slate-500 text-[9px] mb-1">{label}</p>
+                    <p className="font-black text-[#B91C1C] text-base">{payload[0].value} Pengajuan</p>
+                  </div>
+                )}
+              />
+              <Area type="monotone" dataKey="count" stroke="#B91C1C" strokeWidth={3} fillOpacity={1} fill="url(#colorCount)" />
+              {stats.timeline.length > 0 && stats.peakDate && (
+                <ReferenceDot x={stats.peakDate.date} y={stats.peakDate.count} r={6} fill="#B91C1C" stroke="white" strokeWidth={2} />
               )}
             </AreaChart>
           </ResponsiveContainer>
@@ -561,10 +615,10 @@ const AnalyticsDashboard = ({ requests, inventory }) => {
 
       {/* 5. SPLIT ROW: PIE & USER */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 relative z-10">
-        {/* SIMPLIFIED PIE CHART */}
+        {/* PIE CHART */}
         <div className="bg-white p-6 rounded-[13px] border border-slate-100 shadow-sm" ref={pieChartRef}>
-          <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-tight mb-4 flex items-center gap-2">
-            <Activity className="w-4 h-4 text-red-600" /> Proporsi Kategori (%)
+          <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+            <div className="w-2 h-2 bg-[#B91C1C] rounded-full" /> Proporsi Kategori (%)
           </h4>
           <div className="h-[350px] w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -591,13 +645,15 @@ const AnalyticsDashboard = ({ requests, inventory }) => {
                   content={({ active, payload }) => {
                     if (active && payload && payload.length) {
                       const data = payload[0].payload;
-                      const total = stats.category.reduce((a, b) => a + b.value, 0);
-                      const percentage = total > 0 ? ((data.value / total) * 100).toFixed(1) : 0;
+                      const percentage = totalQty > 0 ? ((data.value / totalQty) * 100).toFixed(1) : 0;
                       return (
-                        <div className="bg-white p-2.5 border border-slate-200 shadow-lg rounded-lg">
-                          <p className="font-bold text-slate-700 text-xs mb-0.5">{data.name}</p>
-                          <p className="text-red-600 font-black text-base">{data.value.toLocaleString('id-ID')} unit</p>
-                          <p className="text-slate-500 text-[10px] font-semibold">{percentage}% dari total</p>
+                        <div className="bg-white p-3 border border-slate-200 shadow-xl rounded-[13px] min-w-[160px]">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: getThemeHex(data.name) }} />
+                            <p className="font-bold text-slate-700 text-[10px]">{data.name}</p>
+                          </div>
+                          <p className="text-[#B91C1C] font-black text-lg">{data.value.toLocaleString('id-ID')} unit</p>
+                          <p className="text-slate-400 text-[9px] font-semibold">{percentage}% dari total</p>
                         </div>
                       );
                     }
@@ -620,10 +676,10 @@ const AnalyticsDashboard = ({ requests, inventory }) => {
                   y="49%"
                   textAnchor="middle"
                   dominantBaseline="middle"
-                  className="fill-red-600"
+                  className="fill-[#B91C1C]"
                   style={{ fontSize: '23px', fontWeight: 900 }}
                 >
-                  {stats.category.reduce((a, b) => a + b.value, 0).toLocaleString('id-ID')}
+                  {totalQty.toLocaleString('id-ID')}
                 </text>
                 <text
                   x="31%"
@@ -650,10 +706,9 @@ const AnalyticsDashboard = ({ requests, inventory }) => {
                   iconSize={10}
                   formatter={(value, entry) => {
                     const data = entry.payload;
-                    const total = stats.category.reduce((a, b) => a + b.value, 0);
-                    const percentage = total > 0 ? ((data.value / total) * 100).toFixed(0) : 0;
+                    const percentage = totalQty > 0 ? ((data.value / totalQty) * 100).toFixed(0) : 0;
                     return (
-                      <span className="text-slate-600 text-[10px] font-bold inline-block ml-1">
+                      <span className="text-slate-600 text-[10px] font-bold inline-block ml-1 hover:text-[#B91C1C] transition-colors">
                         {value} ({percentage}%)
                       </span>
                     );
@@ -667,17 +722,17 @@ const AnalyticsDashboard = ({ requests, inventory }) => {
         {/* USER BAR CHART */}
         <div className="bg-white p-6 rounded-[13px] border border-slate-100 shadow-sm flex flex-col relative" ref={userBarRef}>
           <div className="flex items-center justify-between mb-6">
-            <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-tight flex items-center gap-2">
-              <Users className="w-4 h-4 text-red-600" /> Intensitas User Aktif
+            <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-wider flex items-center gap-2">
+              <div className="w-2 h-2 bg-[#B91C1C] rounded-full" /> Intensitas User Aktif
             </h4>
             <div className="relative" ref={topUsersRef}>
-              <button onClick={() => setIsTopUsersOpen(!isTopUsersOpen)} className="bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-lg text-[9px] font-black text-slate-500 flex items-center gap-2 hover:bg-slate-100 transition-all uppercase">
+              <button onClick={() => setIsTopUsersOpen(!isTopUsersOpen)} className="bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-[13px] text-[9px] font-black text-slate-500 flex items-center gap-2 hover:bg-white hover:text-[#B91C1C] transition-all uppercase">
                 TOP {topUsersLimit === 0 ? 'SEMUA' : topUsersLimit} <ChevronDown size={10} className={`transition-transform duration-300 ${isTopUsersOpen ? 'rotate-180' : ''}`} />
               </button>
               {isTopUsersOpen && (
-                <div className="absolute right-0 top-full mt-1 bg-white border border-slate-100 rounded-xl shadow-xl z-[150] overflow-hidden animate-in zoom-in-95 w-24">
+                <div className="absolute right-0 top-full mt-1 bg-white border border-slate-100 rounded-[13px] shadow-xl z-[150] overflow-hidden animate-in zoom-in-95 w-24">
                   {topOptions.map(opt => (
-                    <button key={opt} onClick={() => { setTopUsersLimit(opt); setIsTopUsersOpen(false); }} className={`w-full text-left px-3 py-2 text-[10px] font-bold transition-all border-b border-slate-50 last:border-none ${topUsersLimit === opt ? 'bg-red-600 text-white' : 'text-slate-500 hover:bg-red-50 hover:text-red-600'}`}>
+                    <button key={opt} onClick={() => { setTopUsersLimit(opt); setIsTopUsersOpen(false); }} className={`w-full text-left px-3 py-2 text-[9px] font-bold transition-all border-b border-slate-50 last:border-none ${topUsersLimit === opt ? 'bg-[#B91C1C] text-white' : 'text-slate-500 hover:bg-white hover:text-[#B91C1C]'}`}>
                       {opt === 0 ? 'Semua' : `Top ${opt}`}
                     </button>
                   ))}
@@ -689,32 +744,16 @@ const AnalyticsDashboard = ({ requests, inventory }) => {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={stats.user} margin={{ top: 20, right: 20, left: 0, bottom: 40 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis
-                  dataKey="name"
-                  fontSize={9}
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: '#64748b', fontWeight: 700 }}
-                  angle={-30}
-                  textAnchor="end"
-                  interval={0}
-                  height={60}
-                  dy={10}
-                />
-                <YAxis
-                  fontSize={9}
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: '#94a3b8', fontWeight: 600 }}
-                />
+                <XAxis dataKey="name" fontSize={9} axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontWeight: 700 }} angle={-30} textAnchor="end" interval={0} height={60} dy={10} />
+                <YAxis fontSize={9} axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontWeight: 600 }} />
                 <Tooltip
                   cursor={{ fill: '#f8fafc', opacity: 0.6 }}
                   content={({ active, payload }) => {
                     if (active && payload && payload.length) {
                       return (
-                        <div className="bg-white p-2.5 border border-slate-200 shadow-lg rounded-lg">
-                          <p className="font-bold text-slate-700 text-[10px] mb-1">{payload[0].payload.name}</p>
-                          <p className="text-slate-800 font-black text-sm">{payload[0].value} Pengajuan</p>
+                        <div className="bg-white p-3 border border-slate-200 shadow-xl rounded-[13px]">
+                          <p className="font-bold text-slate-700 text-[9px] mb-1">{payload[0].payload.name}</p>
+                          <p className="text-slate-800 font-black text-base">{payload[0].value} Pengajuan</p>
                         </div>
                       );
                     }
@@ -722,14 +761,7 @@ const AnalyticsDashboard = ({ requests, inventory }) => {
                   }}
                 />
                 <Bar dataKey="count" fill="#1e293b" radius={[6, 6, 0, 0]} barSize={50}>
-                  <LabelList
-                    dataKey="count"
-                    position="top"
-                    fontSize={13}
-                    fontWeight={900}
-                    fill="#1e293b"
-                    offset={8}
-                  />
+                  <LabelList dataKey="count" position="top" fontSize={13} fontWeight={900} fill="#1e293b" offset={8} />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
@@ -740,17 +772,17 @@ const AnalyticsDashboard = ({ requests, inventory }) => {
       {/* 6. FULL WIDTH ROW: ITEM VOLUME */}
       <div className="bg-white p-6 rounded-[13px] border border-slate-100 shadow-sm flex flex-col relative z-0" ref={itemBarRef}>
         <div className="flex items-center justify-between mb-6 px-2" ref={topItemsRef}>
-          <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-tight flex items-center gap-2">
-            <Package className="w-4 h-4 text-red-600" /> Analisis Volume Pengeluaran Item
+          <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-wider flex items-center gap-2">
+            <div className="w-2 h-2 bg-[#B91C1C] rounded-full" /> Analisis Volume Pengeluaran Item
           </h4>
           <div className="relative">
-            <button onClick={() => setIsTopItemsOpen(!isTopItemsOpen)} className="bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-lg text-[9px] font-black text-slate-500 flex items-center gap-2 hover:bg-slate-100 transition-all uppercase">
+            <button onClick={() => setIsTopItemsOpen(!isTopItemsOpen)} className="bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-[13px] text-[9px] font-black text-slate-500 flex items-center gap-2 hover:bg-white hover:text-[#B91C1C] transition-all uppercase">
               TOP {topItemsLimit === 0 ? 'SEMUA' : topItemsLimit} <ChevronDown size={10} className={`transition-transform duration-300 ${isTopItemsOpen ? 'rotate-180' : ''}`} />
             </button>
             {isTopItemsOpen && (
-              <div className="absolute right-0 top-full mt-1 bg-white border border-slate-100 rounded-xl shadow-xl z-[150] overflow-hidden animate-in zoom-in-95 w-24">
+              <div className="absolute right-0 top-full mt-1 bg-white border border-slate-100 rounded-[13px] shadow-xl z-[150] overflow-hidden animate-in zoom-in-95 w-24">
                 {topOptions.map(opt => (
-                  <button key={opt} onClick={() => { setTopItemsLimit(opt); setIsTopItemsOpen(false); }} className={`w-full text-left px-3 py-2 text-[10px] font-bold transition-all border-b border-slate-50 last:border-none ${topItemsLimit === opt ? 'bg-red-600 text-white' : 'text-slate-500 hover:bg-red-50 hover:text-red-600'}`}>
+                  <button key={opt} onClick={() => { setTopItemsLimit(opt); setIsTopItemsOpen(false); }} className={`w-full text-left px-3 py-2 text-[9px] font-bold transition-all border-b border-slate-50 last:border-none ${topItemsLimit === opt ? 'bg-[#B91C1C] text-white' : 'text-slate-500 hover:bg-white hover:text-[#B91C1C]'}`}>
                     {opt === 0 ? 'Semua' : `Top ${opt}`}
                   </button>
                 ))}
@@ -763,40 +795,23 @@ const AnalyticsDashboard = ({ requests, inventory }) => {
             <BarChart data={stats.items} layout="vertical" margin={{ left: 20, right: 80, top: 10, bottom: 20 }}>
               <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f1f5f9" />
               <XAxis type="number" hide />
-              <YAxis
-                dataKey="name"
-                type="category"
-                fontSize={10}
-                width={140}
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: '#475569', fontWeight: 700 }}
-                interval={0}
-              />
+              <YAxis dataKey="name" type="category" fontSize={9} width={140} axisLine={false} tickLine={false} tick={{ fill: '#475569', fontWeight: 700 }} interval={0} />
               <Tooltip
                 cursor={{ fill: '#f8fafc', opacity: 0.5 }}
                 content={({ active, payload }) => {
                   if (active && payload && payload.length) {
                     return (
-                      <div className="bg-white p-2.5 border border-slate-200 shadow-lg rounded-lg">
-                        <p className="font-bold text-slate-700 text-[10px] mb-1">{payload[0].payload.name}</p>
-                        <p className="text-red-600 font-black text-base">{payload[0].value.toLocaleString('id-ID')} Unit</p>
+                      <div className="bg-white p-3 border border-slate-200 shadow-xl rounded-[13px]">
+                        <p className="font-bold text-slate-700 text-[9px] mb-1">{payload[0].payload.name}</p>
+                        <p className="text-[#B91C1C] font-black text-base">{payload[0].value.toLocaleString('id-ID')} Unit</p>
                       </div>
                     );
                   }
                   return null;
                 }}
               />
-              <Bar dataKey="qty" fill="#b91c1c" radius={[0, 6, 6, 0]} barSize={32}>
-                <LabelList
-                  dataKey="qty"
-                  position="right"
-                  fontSize={13}
-                  fontWeight={900}
-                  fill="#b91c1c"
-                  offset={12}
-                  formatter={(value) => value.toLocaleString('id-ID')}
-                />
+              <Bar dataKey="qty" fill="#B91C1C" radius={[0, 6, 6, 0]} barSize={32}>
+                <LabelList dataKey="qty" position="right" fontSize={12} fontWeight={900} fill="#B91C1C" offset={12} formatter={(value) => value.toLocaleString('id-ID')} />
               </Bar>
             </BarChart>
           </ResponsiveContainer>

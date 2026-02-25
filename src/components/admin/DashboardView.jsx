@@ -195,7 +195,7 @@ const DashboardView = ({ requests, handleApproval, onViewDetails, setView }) => 
         </div>
 
         {/* Table - ENHANCED */}
-        <div className="bg-white rounded-[32px] border border-slate-100 shadow-2xl shadow-slate-200/30 overflow-hidden relative">
+        <div className="bg-white rounded-[20px] border border-slate-100 shadow-2xl shadow-slate-200/30 overflow-hidden relative">
           <div className="max-h-[650px] overflow-y-auto custom-scrollbar">
             <table className="w-full text-left border-collapse">
               <thead className="sticky top-0 z-30 bg-gradient-to-r from-slate-800 to-slate-900">
@@ -213,7 +213,7 @@ const DashboardView = ({ requests, handleApproval, onViewDetails, setView }) => 
                           placeholder="Cari ID..." 
                           value={filters.ref}
                           onChange={(e) => handleFilterChange('ref', e.target.value)}
-                          className="w-full pl-10 pr-4 py-2.5 bg-slate-700/50 border border-transparent rounded-xl text-xs text-white placeholder-slate-400 focus:border-red-400 focus:bg-slate-700 focus:ring-2 focus:ring-red-400/20 outline-none transition-all duration-300 lowercase font-bold shadow-inner"
+                          className="w-full pl-10 pr-4 py-2.5 bg-slate-700/50 border border-transparent rounded-[10px] text-xs text-white placeholder-slate-400 focus:border-red-400 focus:bg-slate-700 focus:ring-2 focus:ring-red-400/20 outline-none transition-all duration-300 lowercase font-bold shadow-inner"
                         />
                       </div>
                     </div>

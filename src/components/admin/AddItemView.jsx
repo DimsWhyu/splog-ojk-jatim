@@ -24,7 +24,6 @@ const AddItemView = ({ inventory, onAddItem, onCancel }) => {
   const [showCategoryInput, setShowCategoryInput] = useState(false);
   const [newCategory, setNewCategory] = useState('');
   const [formProgress, setFormProgress] = useState(0);
-  const [showCodeHelper, setShowCodeHelper] = useState(false);
   const [isCompressing, setIsCompressing] = useState(false);
   
   const suggestionRef = useRef(null);
@@ -47,9 +46,6 @@ const AddItemView = ({ inventory, onAddItem, onCancel }) => {
       if (suggestionRef.current && !suggestionRef.current.contains(event.target)) {
         setShowSuggestions(false);
       }
-      if (codeHelperRef.current && !codeHelperRef.current.contains(event.target)) {
-        setShowCodeHelper(false);
-      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -61,7 +57,6 @@ const AddItemView = ({ inventory, onAddItem, onCancel }) => {
     const maxCode = ids.length > 0 ? Math.max(...ids) : 1000000000;
     const newCode = String(maxCode + 1);
     setFormData({ ...formData, code: newCode });
-    setShowCodeHelper(false);
   };
 
   // --- BARU: Kompres gambar sebelum convert ke base64 ---
@@ -266,7 +261,6 @@ const AddItemView = ({ inventory, onAddItem, onCancel }) => {
                   className={getInputStyle('code')} 
                   value={formData.code} 
                   onChange={(e) => setFormData({...formData, code: e.target.value})}
-                  onFocus={() => setShowCodeHelper(true)}
                 />
                 <button
                   type="button"
@@ -277,21 +271,6 @@ const AddItemView = ({ inventory, onAddItem, onCancel }) => {
                   <Sparkles className="w-4 h-4" />
                 </button>
               </div>
-              {showCodeHelper && (
-                <div className="absolute z-50 w-full mt-2 bg-white rounded-[13px] shadow-2xl border border-slate-100 p-3 animate-in fade-in zoom-in-95 duration-200">
-                  <div className="flex items-start gap-2">
-                    <Info className="w-4 h-4 text-blue-500 mt-0.5" />
-                    <div className="flex-1">
-                      <p className="text-[10px] font-bold text-slate-600 mb-2">Tips Kode Barang:</p>
-                      <ul className="text-[9px] text-slate-500 space-y-1">
-                        <li>• Gunakan format 10 digit angka</li>
-                        <li>• Kode harus unik untuk setiap barang</li>
-                        <li>• Klik icon ✨ untuk generate otomatis</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              )}
               {errors.code && <p className="text-[10px] font-bold text-red-500 px-1 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.code}</p>}
             </div>
 
