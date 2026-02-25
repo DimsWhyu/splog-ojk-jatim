@@ -18,7 +18,7 @@ const Footer = () => {
               <div className="h-10 w-[2px] bg-slate-200 hidden sm:block"></div>
               <div className="leading-tight">
                 <h3 className="text-xl md:text-2xl font-black tracking-tighter text-red-600">Kantor OJK</h3>
-                <p className="text-[11px] md:text-sm font-bold tracking-widest text-slate-400 uppercase">Provinsi Jawa Timur</p>
+                <p className="text-[11px] md:text-sm font-bold tracking-tight text-slate-400 uppercase">Provinsi Jawa Timur</p>
               </div>
             </div>
             
@@ -36,7 +36,7 @@ const Footer = () => {
               <p className="text-[15px] font-black text-slate-800 leading-tight tracking-tighter">
                 Sistem Pengelolaan Logistik
               </p>
-              <p className="text-[12px] font-bold mt-1.5 text-slate-400 tracking-tight">
+              <p className="text-[12px] font-medium mt-1.5 text-slate-400 tracking-tight">
                 © 2026 Otoritas Jasa Keuangan. All Rights Reserved.
               </p>
             </div>

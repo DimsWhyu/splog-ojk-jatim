@@ -42,7 +42,6 @@ const CatalogView = ({ inventory, filteredItems, activeCategory, setActiveCatego
   const { getCartItem } = useCart();
   const scrollTrackRef = useRef(null);
   
-  const [scrollProgress, setScrollProgress] = useState(0);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -51,9 +50,6 @@ const CatalogView = ({ inventory, filteredItems, activeCategory, setActiveCatego
   useEffect(() => {
     const handleScroll = () => {
       if (!isDragging) {
-        const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
-        const progress = (window.scrollY / totalHeight) * 100;
-        setScrollProgress(progress);
         setShowBackToTop(window.scrollY > 400);
       }
     };
@@ -67,7 +63,6 @@ const CatalogView = ({ inventory, filteredItems, activeCategory, setActiveCatego
       const clickY = e.clientY - track.top;
       let percentage = (clickY / track.height) * 100;
       percentage = Math.max(0, Math.min(100, percentage)); 
-      setScrollProgress(percentage);
       const totalScrollHeight = document.documentElement.scrollHeight - window.innerHeight;
       window.scrollTo(0, (percentage / 100) * totalScrollHeight);
     }
@@ -94,15 +89,6 @@ const CatalogView = ({ inventory, filteredItems, activeCategory, setActiveCatego
 
   return (
     <div className="relative pl-6 font-sans animate-in fade-in slide-in-from-bottom-4 duration-500">
-      
-      {/* INTERACTIVE SLIDE BAR */}
-      <div ref={scrollTrackRef} onMouseDown={() => setIsDragging(true)} className="fixed right-2 top-4 bottom-4 w-3 bg-slate-100/50 backdrop-blur-sm rounded-full z-[150] border border-slate-200 shadow-inner cursor-pointer hidden md:block">
-        <div className="absolute w-full bg-gradient-to-b from-red-500 via-red-700 to-[#4a0404] rounded-full shadow-lg" style={{ height: '40px', top: `calc(${scrollProgress}% - ${scrollProgress * 0.4}px)` }}>
-          <div className="w-1/2 h-0.5 bg-white/30 mx-auto mt-4 rounded-full"></div>
-          <div className="w-1/2 h-0.5 bg-white/30 mx-auto mt-1 rounded-full"></div>
-        </div>
-      </div>
-
       {/* --- REVISI: FLOATING BUTTONS (SERAGAM UKURAN & GANTI ICON) --- */}
       <div className="fixed bottom-8 right-8 md:right-12 z-[140] flex flex-col items-center gap-3">
         {/* 1. Tombol Back to Top (Tema Merah OJK, Ukuran Tetap w-14 h-14) */}
@@ -114,10 +100,9 @@ const CatalogView = ({ inventory, filteredItems, activeCategory, setActiveCatego
         >
           <ChevronUp className="w-7 h-7" strokeWidth={3} />
         </button>
-
         {/* 2. Tombol WhatsApp (Image PNG, Ukuran Tetap w-14 h-14 dalam lingkaran putih) */}
         <a 
-          href="https://wa.me/6281938234937" 
+          href="https://wa.me/6281938234937  " 
           target="_blank" 
           rel="noopener noreferrer"
           // Menggunakan container putih agar PNG terlihat bersih, ukuran disamakan w-14 h-14
@@ -125,7 +110,7 @@ const CatalogView = ({ inventory, filteredItems, activeCategory, setActiveCatego
           title="Hubungi Admin (WhatsApp)"
         >
           <img 
-            src="https://images.icon-icons.com/2972/PNG/512/whatsapp_logo_icon_186881.png" 
+            src="https://images.icon-icons.com/2972/PNG/512/whatsapp_logo_icon_186881.png  " 
             alt="WhatsApp" 
             className="w-full h-full object-cover"
           />

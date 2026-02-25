@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import StatusBadge from '../common/StatusBadge';
-import { Eye, XCircle, ClipboardList, FileText, PackageSearch, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Eye, XCircle, ClipboardList, FileText, PackageSearch, AlertCircle, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
 
 const HostoryView = ({ requests, currentUser, onViewDetails, onCancel, downloadXLSX }) => {
   // Filter data milik user yang sedang login
   const userRequests = requests.filter(r => r.user === currentUser?.name);
-  const [expandedRejectReason, setExpandedRejectReason] = useState(null);
+  const [expandedReason, setExpandedReason] = useState(null);
 
-  // Toggle expand/collapse rejection reason
-  const toggleRejectReason = (reqId) => {
-    setExpandedRejectReason(expandedRejectReason === reqId ? null : reqId);
+  // Toggle expand/collapse reason
+  const toggleReason = (reqId) => {
+    setExpandedReason(expandedReason === reqId ? null : reqId);
   };
 
   return (
@@ -28,12 +28,12 @@ const HostoryView = ({ requests, currentUser, onViewDetails, onCancel, downloadX
         </div>
       </div>
 
-      {/* --- REVISI: CONTAINER SCROLLABLE DENGAN STICKY HEADER --- */}
+      {/* --- CONTAINER SCROLLABLE DENGAN STICKY HEADER --- */}
       <div className="bg-white rounded-[32px] border border-slate-100 overflow-hidden shadow-2xl shadow-slate-200/40 relative">
         <div className="max-h-[550px] overflow-y-auto custom-scrollbar">
           <table className="w-full text-left border-collapse">
             
-            {/* STICKY HEADER - MODERN SLATE STYLE (Berbeda dengan tabel) */}
+            {/* STICKY HEADER */}
             <thead className="sticky top-0 z-20 shadow-md">
               <tr className="bg-slate-800 text-white text-[10px] font-black uppercase tracking-[0.2em]">
                 <th className="px-8 py-6 border-b border-slate-700">No. Referensi</th>
@@ -95,28 +95,58 @@ const HostoryView = ({ requests, currentUser, onViewDetails, onCancel, downloadX
                     </td>
                   </tr>
 
-                  {/* REJECTION REASON ROW - BARU DITAMBAHKAN */}
+                  {/* REJECTION REASON ROW - Admin Reject */}
                   {req.status === 'Ditolak' && req.rejectionReason && (
                     <tr className="bg-red-50/30">
                       <td colSpan="5" className="px-8 py-0">
                         <div className="py-4">
                           <button
-                            onClick={() => toggleRejectReason(req.id)}
+                            onClick={() => toggleReason(req.id)}
                             className="flex items-center gap-2 text-red-600 font-bold text-[11px] tracking-tight hover:text-red-700 transition-colors"
                           >
-                            <AlertCircle className="w-4 h-4" />
-                            Alasan Penolakan
-                            {expandedRejectReason === req.id ? (
+                            <AlertTriangle className="w-4 h-4" />
+                            Alasan Penolakan (Admin)
+                            {expandedReason === req.id ? (
                               <ChevronUp className="w-4 h-4" />
                             ) : (
                               <ChevronDown className="w-4 h-4" />
                             )}
                           </button>
                           
-                          {expandedRejectReason === req.id && (
+                          {expandedReason === req.id && (
                             <div className="mt-3 p-4 bg-white border border-red-200 rounded-[13px] animate-in fade-in slide-in-from-top-2 duration-200">
                               <p className="text-slate-700 text-[12px] font-medium leading-relaxed">
                                 {req.rejectionReason}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+
+                  {/* CANCELLATION REASON ROW - User Cancel - BARU */}
+                  {req.status === 'Dibatalkan' && req.cancellationReason && (
+                    <tr className="bg-orange-50/30">
+                      <td colSpan="5" className="px-8 py-0">
+                        <div className="py-4">
+                          <button
+                            onClick={() => toggleReason(req.id)}
+                            className="flex items-center gap-2 text-orange-600 font-bold text-[11px] tracking-tight hover:text-orange-700 transition-colors"
+                          >
+                            <AlertCircle className="w-4 h-4" />
+                            Alasan Pembatalan (Anda)
+                            {expandedReason === req.id ? (
+                              <ChevronUp className="w-4 h-4" />
+                            ) : (
+                              <ChevronDown className="w-4 h-4" />
+                            )}
+                          </button>
+                          
+                          {expandedReason === req.id && (
+                            <div className="mt-3 p-4 bg-white border border-orange-200 rounded-[13px] animate-in fade-in slide-in-from-top-2 duration-200">
+                              <p className="text-slate-700 text-[12px] font-medium leading-relaxed">
+                                {req.cancellationReason}
                               </p>
                             </div>
                           )}

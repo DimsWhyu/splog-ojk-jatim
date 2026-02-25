@@ -4,6 +4,7 @@ import * as XLSX from 'xlsx';
 import Navbar from './components/common/Navbar';
 import Sidebar from './components/common/Sidebar';
 import Footer from './components/common/Footer'; 
+import ScrollProgressBar from './components/common/ScrollProgressBar';
 import CatalogView from './components/user/CatalogView';
 import CartView from './components/user/CartView';
 import DashboardView from './components/admin/DashboardView';
@@ -15,7 +16,7 @@ import AnalyticsDashboard from './components/admin/AnalyticsDashboard';
 import { CartProvider, useCart } from './context/CartContext';
 import './App.css';
 
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx1favnpUXEXwQOgkDOwggi5wpx1hVb5BOQntza3A2cSeQ-7cOOwSrUHUPQCU5iraXW/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxPguZ9zw2tkBXtnKcTkLx63RVBs0Uowq0VX-FoEbvQTxnUd6fyJcBh7z_Mce5Crs83/exec";
 
 const INITIAL_REQUESTS = [];
 
@@ -45,17 +46,21 @@ const AppContent = () => {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [cancelModal, setCancelModal] = useState({ show: false, request: null });
   const [expandedRejectReason, setExpandedRejectReason] = useState(null);
+  
+  // ← BARU: State untuk alasan pembatalan user
+  const [cancellationReason, setCancellationReason] = useState('');
+  const [showCancellationInput, setShowCancellationInput] = useState(false);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
-    if (selectedRequest || cancelModal.show || warning.show) {
+    if (selectedRequest || cancelModal.show || warning.show || showCancellationInput) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
     }
     return () => { document.body.style.overflow = 'unset'; };
-  }, [selectedRequest, cancelModal.show, warning.show]);
+  }, [selectedRequest, cancelModal.show, warning.show, showCancellationInput]);
 
   const { cart, clearCart, addToCart: addToCartContext, updateCartQty, getCartItem } = useCart();
   
@@ -98,6 +103,7 @@ const AppContent = () => {
               note: h.tujuankebutuhan || h.tujuan || h["tujuan"], 
               status: h.statusverifikasi || h.status || h["status"], 
               rejectionReason: h.alasanpenolakan || h["alasanpenolakan"] || '',
+              cancellationReason: h.alasanpembatalan || h["alasanpembatalan"] || '',
               itemsDetail: itemsDetailArray 
             };
           });
@@ -248,7 +254,8 @@ const AppContent = () => {
       items: cart.reduce((acc, curr) => acc + curr.quantity, 0),
       status: 'Menunggu',
       note: safeNote,
-      rejectionReason: ''
+      rejectionReason: '',
+      cancellationReason: ''
     };
     setRequests([newRequest, ...requests]); 
     clearCart(); setView('history'); 
@@ -263,13 +270,14 @@ const AppContent = () => {
     });
   };
 
-  // REVISI: Handle Approval dengan rejectionReason
-  const handleApproval = async (id, status, rejectionReason = '') => {
+  // REVISI: Handle Approval dengan rejectionReason dan cancellationReason
+  const handleApproval = async (id, status, rejectionReason = '', cancellationReason = '') => {
     setRequests(prevRequests => prevRequests.map(r => 
       r.id === id ? { 
         ...r, 
         status,
-        rejectionReason: status === 'Ditolak' ? rejectionReason : ''
+        rejectionReason: status === 'Ditolak' ? rejectionReason : '',
+        cancellationReason: status === 'Dibatalkan' ? cancellationReason : ''
       } : r
     ));
     const targetReq = requests.find(r => r.id === id);
@@ -290,18 +298,26 @@ const AppContent = () => {
           action: actionMap[status] || 'approveRequest', 
           ...targetReq, 
           status: status,
-          alasanpenolakan: rejectionReason
+          alasanpenolakan: rejectionReason,
+          alasanpembatalan: cancellationReason
         })
       });
     } catch (error) { console.error(`Gagal mencatat status ${status}:`, error); }
   };
 
-  const handleCancel = (req) => { setCancelModal({ show: true, request: req }); };
+  // ← REVISI: Handle Cancel dengan input alasan
+  const handleCancel = (req) => { 
+    setCancelModal({ show: true, request: req });
+    setShowCancellationInput(true);
+    setCancellationReason('');
+  };
 
   const confirmCancelRequest = () => {
-    if (cancelModal.request) {
-      handleApproval(cancelModal.request.id, 'Dibatalkan');
+    if (cancelModal.request && cancellationReason.trim()) {
+      handleApproval(cancelModal.request.id, 'Dibatalkan', '', cancellationReason);
       setCancelModal({ show: false, request: null });
+      setShowCancellationInput(false);
+      setCancellationReason('');
     }
   };
 
@@ -330,7 +346,7 @@ const AppContent = () => {
   if (isLoading) {
     return (
       <div className="fixed inset-0 z-[999] bg-batik-ojk flex items-center justify-center overflow-hidden">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/OJK_Logo.png  " alt="OJK" className="h-28 w-auto animate-pulse" />
+        <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/OJK_Logo.png" alt="OJK" className="h-28 w-auto animate-pulse" />
       </div>
     );
   }
@@ -405,7 +421,7 @@ const AppContent = () => {
                                 </td>
                               </tr>
                               
-                              {/* REJECTION REASON ROW - BARU DITAMBAHKAN */}
+                              {/* REJECTION REASON ROW */}
                               {req.status === 'Ditolak' && req.rejectionReason && (
                                 <tr className="bg-red-50/30">
                                   <td colSpan="5" className="px-6 py-0">
@@ -427,6 +443,36 @@ const AppContent = () => {
                                         <div className="mt-3 p-4 bg-white border border-red-200 rounded-[13px] animate-in fade-in slide-in-from-top-2 duration-200">
                                           <p className="text-slate-700 text-[12px] font-medium leading-relaxed">
                                             {req.rejectionReason}
+                                          </p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </td>
+                                </tr>
+                              )}
+                              
+                              {/* CANCELLATION REASON ROW - BARU */}
+                              {req.status === 'Dibatalkan' && req.cancellationReason && (
+                                <tr className="bg-orange-50/30">
+                                  <td colSpan="5" className="px-6 py-0">
+                                    <div className="py-4">
+                                      <button
+                                        onClick={() => toggleRejectReason(req.id)}
+                                        className="flex items-center gap-2 text-orange-600 font-bold text-[11px] tracking-tight hover:text-orange-700 transition-colors"
+                                      >
+                                        <AlertCircle className="w-4 h-4" />
+                                        Alasan Pembatalan
+                                        {expandedRejectReason === req.id ? (
+                                          <ChevronUp className="w-4 h-4" />
+                                        ) : (
+                                          <ChevronDown className="w-4 h-4" />
+                                        )}
+                                      </button>
+                                      
+                                      {expandedRejectReason === req.id && (
+                                        <div className="mt-3 p-4 bg-white border border-orange-200 rounded-[13px] animate-in fade-in slide-in-from-top-2 duration-200">
+                                          <p className="text-slate-700 text-[12px] font-medium leading-relaxed">
+                                            {req.cancellationReason}
                                           </p>
                                         </div>
                                       )}
@@ -462,7 +508,7 @@ const AppContent = () => {
               <div className="bg-gradient-to-r from-red-600 to-[#4a0404] p-8 text-white">
                 <div className="flex justify-between items-center">
                   <div>
-                    <h3 className="text-xl font-black tracking-tighter uppercase">🗃️ Detail Pengajuan Item</h3>
+                    <h3 className="text-xl font-black tracking-tighter uppercase">Detail Pengajuan Item</h3>
                     <p className="text-red-100/70 text-xs font-bold tracking-widest mt-1">{selectedRequest.id} • {selectedRequest.date}</p>
                   </div>
                   <button onClick={() => setSelectedRequest(null)} className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"><X className="w-6 h-6" /></button>
@@ -501,7 +547,7 @@ const AppContent = () => {
                   </div>
                 </div>
                 
-                {/* REJECTION REASON IN MODAL - BARU DITAMBAHKAN */}
+                {/* REJECTION REASON IN MODAL */}
                 {selectedRequest.status === 'Ditolak' && selectedRequest.rejectionReason && (
                   <div className="flex items-start gap-3 mt-4 pt-4 border-t border-red-200">
                     <div className="mt-1 flex-shrink-0">
@@ -511,6 +557,21 @@ const AppContent = () => {
                       <p className="text-[10px] font-black text-red-400 uppercase tracking-widest mb-1">Alasan Penolakan:</p>
                       <p className="text-sm font-bold text-red-700 leading-relaxed break-words whitespace-pre-wrap bg-red-50 p-3 rounded-[13px] border border-red-100">
                         {selectedRequest.rejectionReason}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                
+                {/* CANCELLATION REASON IN MODAL - BARU */}
+                {selectedRequest.status === 'Dibatalkan' && selectedRequest.cancellationReason && (
+                  <div className="flex items-start gap-3 mt-4 pt-4 border-t border-orange-200">
+                    <div className="mt-1 flex-shrink-0">
+                      <AlertCircle className="w-4 h-4 text-orange-600" />
+                    </div>
+                    <div className="flex-1 min-w-0"> 
+                      <p className="text-[10px] font-black text-orange-400 uppercase tracking-widest mb-1">Alasan Pembatalan:</p>
+                      <p className="text-sm font-bold text-orange-700 leading-relaxed break-words whitespace-pre-wrap bg-orange-50 p-3 rounded-[13px] border border-orange-100">
+                        {selectedRequest.cancellationReason}
                       </p>
                     </div>
                   </div>
@@ -533,17 +594,46 @@ const AppContent = () => {
           </div>
         )}
 
-        {/* MODAL KONFIRMASI BATAL */}
+        {/* MODAL KONFIRMASI BATAL - REVISI DENGAN INPUT ALASAN */}
         {cancelModal.show && (
           <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md animate-fade-in" onClick={() => setCancelModal({ show: false, request: null })}></div>
+            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md animate-fade-in" onClick={() => { setCancelModal({ show: false, request: null }); setShowCancellationInput(false); }}></div>
             <div className="relative bg-white rounded-[17px] shadow-2xl p-10 max-w-md w-full animate-modal-pop text-center">
               <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6"><AlertCircle className="w-12 h-12 text-red-600 animate-pulse" /></div>
               <h3 className="text-2xl font-black text-slate-800 mb-3 tracking-tight">Konfirmasi Batal</h3>
-              <p className="text-sm font-medium text-slate-500 leading-relaxed px-2">Apakah Anda yakin ingin membatalkan pengajuan <span className="text-red-600 font-bold">{cancelModal.request?.id}</span>? <br /><span className="italic font-bold text-slate-400 text-xs mt-2 block">*Stok barang akan otomatis dikembalikan ke gudang.</span></p>
+              <p className="text-sm font-medium text-slate-500 leading-relaxed px-2 mb-4">Apakah Anda yakin ingin membatalkan pengajuan <span className="text-red-600 font-bold">{cancelModal.request?.id}</span>?</p>
+              
+              {/* INPUT ALASAN PEMBATALAN - BARU */}
+              {showCancellationInput && (
+                <div className="mb-6 text-left">
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-tight mb-2">
+                    Alasan Pembatalan <span className="text-red-600">*</span>
+                  </label>
+                  <textarea
+                    value={cancellationReason}
+                    onChange={(e) => setCancellationReason(e.target.value)}
+                    placeholder="Jelaskan alasan pembatalan..."
+                    className="w-full h-24 px-4 py-3 bg-slate-50 border border-slate-200 rounded-[13px] text-[12px] font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                    autoFocus
+                  />
+                  {cancellationReason.trim() === '' && (
+                    <p className="text-red-600 text-[10px] font-bold mt-2 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" /> Alasan pembatalan wajib diisi!
+                    </p>
+                  )}
+                </div>
+              )}
+              
+              <p className="italic font-bold text-slate-400 text-xs mb-6 block">*Stok barang akan otomatis dikembalikan ke gudang.</p>
               <div className="grid grid-cols-2 gap-4 mt-10">
-                <button onClick={() => setCancelModal({ show: false, request: null })} className="py-4 bg-slate-100 text-slate-600 font-black rounded-2xl hover:bg-slate-200 transition-all text-[12px] uppercase tracking-tight">Kembali</button>
-                <button onClick={confirmCancelRequest} className="py-4 bg-gradient-to-r from-red-600 to-[#4a0404] text-white font-black rounded-2xl shadow-xl shadow-red-200 transition-all text-[12px] uppercase tracking-tight">Ya, Batalkan</button>
+                <button onClick={() => { setCancelModal({ show: false, request: null }); setShowCancellationInput(false); }} className="py-4 bg-slate-100 text-slate-600 font-black rounded-2xl hover:bg-slate-200 transition-all text-[12px] uppercase tracking-tight">Kembali</button>
+                <button 
+                  onClick={confirmCancelRequest} 
+                  disabled={cancellationReason.trim() === ''}
+                  className="py-4 bg-gradient-to-r from-red-600 to-[#4a0404] text-white font-black rounded-2xl shadow-xl shadow-red-200 transition-all text-[12px] uppercase tracking-tight disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Ya, Batalkan
+                </button>
               </div>
             </div>
           </div>
@@ -551,6 +641,9 @@ const AppContent = () => {
         
         <Footer />
       </div>
+
+      {/* REVISI: TAMBAHKAN SCROLL PROGRESS BAR DI SINI (GLOBAL) */}
+      <ScrollProgressBar />
     </div>
   );
 };

@@ -63,9 +63,6 @@ const Navbar = ({ role, currentUser, onLogout, searchQuery, setSearchQuery, setV
 
   return (
     <nav className="bg-white border-b border-slate-100 sticky top-0 z-[100] shadow-sm">
-      {/* UPDATE: Mengubah max-w-7xl menjadi max-w-[1440px] dan 
-         menyesuaikan padding agar balance (px-6 lg:px-10) 
-      */}
       <div className="max-w-[1440px] mx-auto px-6 lg:px-10 h-20 md:h-24 flex items-center justify-between gap-4">
         
         {/* SISI KIRI: Brand Section */}
@@ -87,7 +84,7 @@ const Navbar = ({ role, currentUser, onLogout, searchQuery, setSearchQuery, setV
           </div>
         </div>
 
-        {/* TENGAH: Search Bar Section (Proporsi flex-1 agar mengisi ruang tengah secara seimbang) */}
+        {/* TENGAH: Search Bar Section */}
         {role !== 'admin' ? (
           <div className="flex-1 max-w-xl hidden lg:block relative mx-4" ref={searchRef}>
             <div className="relative group z-50">
@@ -144,6 +141,7 @@ const Navbar = ({ role, currentUser, onLogout, searchQuery, setSearchQuery, setV
             </button>
           )}
 
+          {/* REVISI: Profile Dropdown dengan Lebar Sama Persis */}
           <div className="relative h-full flex items-center" ref={profileRef}>
             <button 
               onClick={() => setShowProfileMenu(!showProfileMenu)}
@@ -169,9 +167,9 @@ const Navbar = ({ role, currentUser, onLogout, searchQuery, setSearchQuery, setV
               </div>
             </button>
 
-            {/* Profile Dropdown (Sama seperti sebelumnya) */}
+            {/* REVISI: Profile Dropdown - Lebar Menyesuaikan Parent */}
             {showProfileMenu && (
-              <div className="absolute top-full right-0 w-64 bg-white rounded-b-2xl shadow-2xl border border-slate-100 border-t-0 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-300 z-50">
+              <div className="absolute top-full right-0 min-w-full w-full bg-white rounded-b-2xl shadow-2xl border border-slate-100 border-t-0 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-300 z-50">
                 <div className="p-5 bg-gradient-to-br from-slate-50 to-white border-b border-slate-100">
                   <div className="space-y-1">
                     <p className="text-[13px] font-bold text-slate-800 truncate">{currentUser?.name}</p>

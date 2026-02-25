@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import ApprovalSection from './ApprovalSection';
 import { 
   History, CheckCircle2, XCircle, PackageSearch, LayoutDashboard, 
-  MinusCircle, Search, Calendar, Filter, RotateCcw, ChevronDown, Check,
-  Settings, Package, LogOut, AlertCircle
+  ChevronUp, Search, Calendar, Filter, RotateCcw, ChevronDown, Check,
+  Settings, Package, LogOut, AlertCircle, AlertTriangle
 } from 'lucide-react';
 
 const DashboardView = ({ requests, handleApproval, onViewDetails, setView }) => {
@@ -19,6 +19,8 @@ const DashboardView = ({ requests, handleApproval, onViewDetails, setView }) => 
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
+
+  const [expandedReason, setExpandedReason] = useState(null);
 
   const [stats, setStats] = useState({
     total: 0,
@@ -60,6 +62,11 @@ const DashboardView = ({ requests, handleApproval, onViewDetails, setView }) => 
     setFilters({ ref: '', name: '', date: '', status: 'Semua' });
   };
 
+  // Toggle expand/collapse reason
+  const toggleReason = (reqId) => {
+    setExpandedReason(expandedReason === reqId ? null : reqId);
+  };
+
   const historyRequests = requests
     .filter(r => {
       const isProcessed = r.status !== 'Menunggu';
@@ -83,8 +90,8 @@ const DashboardView = ({ requests, handleApproval, onViewDetails, setView }) => 
       case 'Batal':
       case 'Dibatalkan':
         return (
-          <div className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-slate-100 to-slate-200 text-slate-600 rounded-full border border-slate-300 font-black text-[9px] uppercase tracking-wider shadow-sm">
-            <MinusCircle className="w-3.5 h-3.5" /> Batal
+          <div className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-orange-50 to-orange-100 text-orange-700 rounded-full border border-orange-200 font-black text-[9px] uppercase tracking-wider shadow-sm">
+            <AlertTriangle className="w-3.5 h-3.5" /> Dibatalkan
           </div>
         );
       case 'Ditolak':
@@ -125,9 +132,9 @@ const DashboardView = ({ requests, handleApproval, onViewDetails, setView }) => 
             <XCircle className="w-4 h-4 text-red-600" />
             <span className="text-[11px] font-black text-red-700">{stats.rejected} Ditolak</span>
           </div>
-          <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 rounded-xl border border-slate-200">
-            <MinusCircle className="w-4 h-4 text-slate-600" />
-            <span className="text-[11px] font-black text-slate-700">{stats.cancelled} Batal</span>
+          <div className="flex items-center gap-2 px-4 py-2.5 bg-orange-50 rounded-xl border border-orange-100">
+            <AlertTriangle className="w-4 h-4 text-orange-600" />
+            <span className="text-[11px] font-black text-orange-700">{stats.cancelled} Dibatalkan</span>
           </div>
         </div>
 
@@ -263,7 +270,7 @@ const DashboardView = ({ requests, handleApproval, onViewDetails, setView }) => 
 
                         {isStatusOpen && (
                           <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-slate-100 overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200">
-                            {['Semua', 'Disetujui', 'Batal', 'Ditolak'].map((option) => (
+                            {['Semua', 'Disetujui', 'Dibatalkan', 'Ditolak'].map((option) => (
                               <button 
                                 key={option}
                                 onClick={() => handleFilterChange('status', option)}
@@ -288,29 +295,91 @@ const DashboardView = ({ requests, handleApproval, onViewDetails, setView }) => 
 
               <tbody className="divide-y divide-slate-50">
                 {historyRequests.map((req, index) => (
-                  <tr key={req.id} className="hover:bg-gradient-to-r hover:from-red-50/30 hover:to-transparent transition-all duration-300 group">
-                    <td className="px-6 py-6 text-center text-xs font-bold text-slate-300 group-hover:text-red-400">
-                      {String(index + 1).padStart(2, '0')}
-                    </td>
-                    <td className="px-6 py-6 text-sm font-black text-slate-700 group-hover:text-red-700 transition-colors">{req.id}</td>
-                    <td className="px-6 py-6 text-sm font-bold text-slate-600">{req.user}</td>
-                    <td className="px-6 py-6 text-xs font-black text-slate-400 tracking-tighter">
-                      {req.date}
-                    </td>
-                    <td className="px-6 py-6">
-                      <div className="flex justify-center">
-                        {getStatusBadge(req.status)}
-                      </div>
-                    </td>
-                    <td className="px-6 py-6 text-center">
-                      <button 
-                        onClick={() => onViewDetails?.(req)} 
-                        className="p-3 bg-blue-50 text-blue-600 hover:bg-red-600 hover:text-white border border-blue-100 hover:border-red-600 rounded-2xl transition-all active:scale-95 shadow-sm group/detail"
-                      >
-                        <PackageSearch className="w-5 h-5 transition-transform group-hover/detail:scale-110" />
-                      </button>
-                    </td>
-                  </tr>
+                  <React.Fragment key={req.id}>
+                    <tr className="hover:bg-gradient-to-r hover:from-red-50/30 hover:to-transparent transition-all duration-300 group">
+                      <td className="px-6 py-6 text-center text-xs font-bold text-slate-300 group-hover:text-red-400">
+                        {String(index + 1).padStart(2, '0')}
+                      </td>
+                      <td className="px-6 py-6 text-sm font-black text-slate-700 group-hover:text-red-700 transition-colors">{req.id}</td>
+                      <td className="px-6 py-6 text-sm font-bold text-slate-600">{req.user}</td>
+                      <td className="px-6 py-6 text-xs font-black text-slate-400 tracking-tighter">
+                        {req.date}
+                      </td>
+                      <td className="px-6 py-6">
+                        <div className="flex justify-center">
+                          {getStatusBadge(req.status)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-6 text-center">
+                        <button 
+                          onClick={() => onViewDetails?.(req)} 
+                          className="p-3 bg-blue-50 text-blue-600 hover:bg-red-600 hover:text-white border border-blue-100 hover:border-red-600 rounded-2xl transition-all active:scale-95 shadow-sm group/detail"
+                        >
+                          <PackageSearch className="w-5 h-5 transition-transform group-hover/detail:scale-110" />
+                        </button>
+                      </td>
+                    </tr>
+
+                    {/* REJECTION REASON ROW - Admin Reject */}
+                    {req.status === 'Ditolak' && req.rejectionReason && (
+                      <tr className="bg-red-50/30">
+                        <td colSpan="6" className="px-6 py-0">
+                          <div className="py-4">
+                            <button
+                              onClick={() => toggleReason(req.id)}
+                              className="flex items-center gap-2 text-red-600 font-bold text-[11px] tracking-tight hover:text-red-700 transition-colors"
+                            >
+                              <AlertTriangle className="w-4 h-4" />
+                              Alasan Penolakan (Admin)
+                              {expandedReason === req.id ? (
+                                <ChevronUp className="w-4 h-4" />
+                              ) : (
+                                <ChevronDown className="w-4 h-4" />
+                              )}
+                            </button>
+                            
+                            {expandedReason === req.id && (
+                              <div className="mt-3 p-4 bg-white border border-red-200 rounded-[13px] animate-in fade-in slide-in-from-top-2 duration-200">
+                                <p className="text-slate-700 text-[12px] font-medium leading-relaxed">
+                                  {req.rejectionReason}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+
+                    {/* CANCELLATION REASON ROW - User Cancel - BARU */}
+                    {req.status === 'Dibatalkan' && req.cancellationReason && (
+                      <tr className="bg-orange-50/30">
+                        <td colSpan="6" className="px-6 py-0">
+                          <div className="py-4">
+                            <button
+                              onClick={() => toggleReason(req.id)}
+                              className="flex items-center gap-2 text-orange-600 font-bold text-[11px] tracking-tight hover:text-orange-700 transition-colors"
+                            >
+                              <AlertCircle className="w-4 h-4" />
+                              Alasan Pembatalan (User)
+                              {expandedReason === req.id ? (
+                                <ChevronUp className="w-4 h-4" />
+                              ) : (
+                                <ChevronDown className="w-4 h-4" />
+                              )}
+                            </button>
+                            
+                            {expandedReason === req.id && (
+                              <div className="mt-3 p-4 bg-white border border-orange-200 rounded-[13px] animate-in fade-in slide-in-from-top-2 duration-200">
+                                <p className="text-slate-700 text-[12px] font-medium leading-relaxed">
+                                  {req.cancellationReason}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 ))}
                 
                 {historyRequests.length === 0 && (
